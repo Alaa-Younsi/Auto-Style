@@ -1,0 +1,414 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Plus, X, Upload, ArrowLeft } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useCategories } from "@/hooks/useCategories";
+import { useLang } from "@/i18n/LanguageProvider";
+import { BentoPanel } from "@/components/ui/BentoPanel";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import type { ProductColor, ProductSize } from "@/types/db";
+import { cn } from "@/lib/utils";
+
+const schema = z.object({
+  name_fr: z.string().min(1),
+  name_ar: z.string().min(1),
+  description_fr: z.string().optional(),
+  description_ar: z.string().optional(),
+  price: z.coerce.number().positive(),
+  compare_at_price: z.coerce.number().positive().optional().or(z.literal("")),
+  category_id: z.string().optional(),
+  stock: z.coerce.number().int().min(0),
+  style_code: z.string().optional(),
+  featured: z.boolean().default(false),
+  status: z.enum(["active", "draft"]).default("active"),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+export function AdminProductForm() {
+  const { id } = useParams();
+  const isNew = !id || id === "new";
+  const navigate = useNavigate();
+  const { t } = useLang();
+  const qc = useQueryClient();
+  const { data: categories } = useCategories();
+
+  const [colors, setColors] = useState<ProductColor[]>([]);
+  const [sizes, setSizes] = useState<ProductSize[]>([]);
+  const [detailsFr, setDetailsFr] = useState<string[]>([""]);
+  const [detailsAr, setDetailsAr] = useState<string[]>([""]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<{ id: string; url: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  // Load existing product
+  const { data: existingProduct } = useQuery({
+    queryKey: ["product-edit", id],
+    enabled: !isNew && !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, product_images(*)")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return data as any;
+    },
+  });
+
+  useEffect(() => {
+    if (existingProduct) {
+      reset({
+        name_fr: existingProduct.name_fr,
+        name_ar: existingProduct.name_ar,
+        description_fr: existingProduct.description_fr ?? "",
+        description_ar: existingProduct.description_ar ?? "",
+        price: existingProduct.price,
+        compare_at_price: existingProduct.compare_at_price ?? "",
+        category_id: existingProduct.category_id ?? "",
+        stock: existingProduct.stock,
+        style_code: existingProduct.style_code ?? "",
+        featured: existingProduct.featured,
+        status: existingProduct.status,
+      });
+      setColors(existingProduct.colors ?? []);
+      setSizes(existingProduct.sizes ?? []);
+      setDetailsFr(existingProduct.details_fr?.length ? existingProduct.details_fr : [""]);
+      setDetailsAr(existingProduct.details_ar?.length ? existingProduct.details_ar : [""]);
+      setExistingImages(
+        (existingProduct.product_images ?? []).map((i: { id: string; url: string }) => ({
+          id: i.id,
+          url: i.url,
+        }))
+      );
+    }
+  }, [existingProduct, reset]);
+
+  const save = useMutation({
+    mutationFn: async (vals: FormValues) => {
+      setUploading(true);
+      const slug = vals.name_fr
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
+
+      const payload = {
+        name_fr: vals.name_fr,
+        name_ar: vals.name_ar,
+        description_fr: vals.description_fr || null,
+        description_ar: vals.description_ar || null,
+        price: vals.price,
+        compare_at_price: vals.compare_at_price ? Number(vals.compare_at_price) : null,
+        category_id: vals.category_id || null,
+        stock: vals.stock,
+        style_code: vals.style_code || null,
+        featured: vals.featured,
+        status: vals.status,
+        colors,
+        sizes,
+        details_fr: detailsFr.filter(Boolean),
+        details_ar: detailsAr.filter(Boolean),
+        slug,
+        updated_at: new Date().toISOString(),
+      };
+
+      let productId = id;
+
+      if (isNew) {
+        const { data, error } = await supabase
+          .from("products")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .insert(payload as any)
+          .select("id")
+          .single();
+        if (error) throw error;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        productId = (data as any).id as string;
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await supabase.from("products").update(payload as any).eq("id", id!);
+        if (error) throw error;
+      }
+
+      // Upload new images
+      for (const file of imageFiles) {
+        const ext = file.name.split(".").pop();
+        const path = `${productId}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("product-images")
+          .upload(path, file);
+        if (upErr) throw upErr;
+
+        const { data: urlData } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(path);
+
+        await supabase.from("product_images").insert({
+          product_id: productId!,
+          url: urlData.publicUrl,
+          alt: vals.name_fr,
+          sort_order: existingImages.length,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+      }
+
+      setUploading(false);
+      return productId;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-products"] });
+      navigate("/admin/products");
+    },
+  });
+
+  const removeExistingImage = async (imgId: string) => {
+    await supabase.from("product_images").delete().eq("id", imgId);
+    setExistingImages((prev) => prev.filter((i) => i.id !== imgId));
+    qc.invalidateQueries({ queryKey: ["products"] });
+  };
+
+  const categoryOptions = (categories ?? []).map((c) => ({
+    value: c.id,
+    label: c.name_fr,
+  }));
+
+  return (
+    <div className="p-6 max-w-3xl mx-auto">
+      <button
+        onClick={() => navigate("/admin/products")}
+        className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-muted hover:text-brand transition-colors mb-6"
+      >
+        <ArrowLeft size={12} /> {t("admin_products")}
+      </button>
+
+      <h1 className="font-mono text-xl font-bold uppercase tracking-tight text-ink mb-8">
+        {isNew ? t("admin_new_product") : t("admin_edit")}
+      </h1>
+
+      <form onSubmit={handleSubmit((v) => save.mutate(v))} className="flex flex-col gap-5">
+        {/* Basic info */}
+        <BentoPanel className="p-6 grid grid-cols-2 gap-4">
+          <Input label={t("admin_name_fr")} error={errors.name_fr?.message} {...register("name_fr")} />
+          <Input label={t("admin_name_ar")} error={errors.name_ar?.message} {...register("name_ar")} />
+          <div className="col-span-2">
+            <label className="text-[10px] uppercase tracking-widest text-muted font-mono block mb-1.5">{t("admin_desc_fr")}</label>
+            <textarea rows={2} className="w-full bg-panel-2 border border-line rounded-lg px-4 py-3 text-sm font-mono text-ink placeholder:text-muted/50 focus:outline-none focus:border-muted transition-colors resize-none" {...register("description_fr")} />
+          </div>
+          <div className="col-span-2">
+            <label className="text-[10px] uppercase tracking-widest text-muted font-mono block mb-1.5">{t("admin_desc_ar")}</label>
+            <textarea rows={2} className="w-full bg-panel-2 border border-line rounded-lg px-4 py-3 text-sm font-ar text-ink placeholder:text-muted/50 focus:outline-none focus:border-muted transition-colors resize-none" {...register("description_ar")} />
+          </div>
+        </BentoPanel>
+
+        {/* Pricing & inventory */}
+        <BentoPanel className="p-6 grid grid-cols-2 gap-4">
+          <Input label={t("admin_price")} type="number" step="1" error={errors.price?.message} {...register("price")} />
+          <Input label={t("admin_compare_price")} type="number" step="1" {...register("compare_at_price")} />
+          <Input label={t("admin_stock")} type="number" min="0" {...register("stock")} />
+          <Input label={t("admin_style_code")} placeholder="RC-001" {...register("style_code")} />
+          <Select
+            label={t("admin_category")}
+            options={categoryOptions}
+            placeholder="Aucune catégorie"
+            {...register("category_id")}
+          />
+          <Select
+            label={t("admin_status")}
+            options={[
+              { value: "active", label: "Active" },
+              { value: "draft", label: "Draft" },
+            ]}
+            {...register("status")}
+          />
+          <label className="col-span-2 flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" className="accent-brand w-4 h-4" {...register("featured")} />
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted">{t("admin_featured")}</span>
+          </label>
+        </BentoPanel>
+
+        {/* Details FR */}
+        <BentoPanel className="p-6">
+          <h3 className="text-[10px] uppercase tracking-widest font-mono text-muted mb-4">{t("admin_details_fr")}</h3>
+          <div className="flex flex-col gap-2">
+            {detailsFr.map((d, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  value={d}
+                  onChange={(e) => setDetailsFr((prev) => prev.map((x, j) => j === i ? e.target.value : x))}
+                  className="flex-1 bg-panel-2 border border-line rounded-lg px-3 py-2 text-xs font-mono text-ink focus:outline-none focus:border-muted"
+                  placeholder={`Détail ${i + 1}…`}
+                />
+                <button type="button" onClick={() => setDetailsFr((p) => p.filter((_, j) => j !== i))} className="text-muted hover:text-brand">
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setDetailsFr((p) => [...p, ""])} className="text-[10px] font-mono text-muted hover:text-brand flex items-center gap-1">
+              <Plus size={10} /> Ajouter
+            </button>
+          </div>
+        </BentoPanel>
+
+        {/* Details AR */}
+        <BentoPanel className="p-6">
+          <h3 className="text-[10px] uppercase tracking-widest font-mono text-muted mb-4">{t("admin_details_ar")}</h3>
+          <div className="flex flex-col gap-2">
+            {detailsAr.map((d, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  value={d}
+                  onChange={(e) => setDetailsAr((prev) => prev.map((x, j) => j === i ? e.target.value : x))}
+                  className="flex-1 bg-panel-2 border border-line rounded-lg px-3 py-2 text-xs font-ar text-ink focus:outline-none focus:border-muted"
+                  placeholder={`تفصيل ${i + 1}…`}
+                />
+                <button type="button" onClick={() => setDetailsAr((p) => p.filter((_, j) => j !== i))} className="text-muted hover:text-brand">
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setDetailsAr((p) => [...p, ""])} className="text-[10px] font-mono text-muted hover:text-brand flex items-center gap-1">
+              <Plus size={10} /> أضف
+            </button>
+          </div>
+        </BentoPanel>
+
+        {/* Colors */}
+        <BentoPanel className="p-6">
+          <h3 className="text-[10px] uppercase tracking-widest font-mono text-muted mb-4">{t("admin_colors")}</h3>
+          <div className="flex flex-col gap-2">
+            {colors.map((c, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={c.hex}
+                  onChange={(e) => setColors((p) => p.map((x, j) => j === i ? { ...x, hex: e.target.value } : x))}
+                  className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent"
+                />
+                <input
+                  value={c.label_fr}
+                  onChange={(e) => setColors((p) => p.map((x, j) => j === i ? { ...x, label_fr: e.target.value } : x))}
+                  className="flex-1 bg-panel-2 border border-line rounded-lg px-3 py-2 text-xs font-mono text-ink focus:outline-none focus:border-muted"
+                  placeholder="Label FR"
+                />
+                <input
+                  value={c.label_ar}
+                  onChange={(e) => setColors((p) => p.map((x, j) => j === i ? { ...x, label_ar: e.target.value } : x))}
+                  className="flex-1 bg-panel-2 border border-line rounded-lg px-3 py-2 text-xs font-ar text-ink focus:outline-none focus:border-muted"
+                  placeholder="تسمية AR"
+                />
+                <button type="button" onClick={() => setColors((p) => p.filter((_, j) => j !== i))} className="text-muted hover:text-brand">
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setColors((p) => [...p, { hex: "#000000", label_fr: "", label_ar: "" }])} className="text-[10px] font-mono text-muted hover:text-brand flex items-center gap-1">
+              <Plus size={10} /> {t("admin_add_color")}
+            </button>
+          </div>
+        </BentoPanel>
+
+        {/* Sizes */}
+        <BentoPanel className="p-6">
+          <h3 className="text-[10px] uppercase tracking-widest font-mono text-muted mb-4">{t("admin_sizes")}</h3>
+          <div className="flex flex-wrap gap-2">
+            {sizes.map((s, i) => (
+              <div key={i} className="flex items-center gap-1 bg-panel-2 border border-line rounded-lg px-2 py-1">
+                <input
+                  value={s.label}
+                  onChange={(e) => setSizes((p) => p.map((x, j) => j === i ? { label: e.target.value } : x))}
+                  className="w-16 bg-transparent text-xs font-mono text-ink focus:outline-none"
+                />
+                <button type="button" onClick={() => setSizes((p) => p.filter((_, j) => j !== i))} className="text-muted hover:text-brand">
+                  <X size={10} />
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setSizes((p) => [...p, { label: "" }])} className="text-[10px] font-mono text-muted hover:text-brand flex items-center gap-1 px-2 py-1 border border-dashed border-line rounded-lg">
+              <Plus size={10} /> {t("admin_add_size")}
+            </button>
+          </div>
+        </BentoPanel>
+
+        {/* Images */}
+        <BentoPanel className="p-6">
+          <h3 className="text-[10px] uppercase tracking-widest font-mono text-muted mb-4">{t("admin_images")}</h3>
+
+          {/* Existing */}
+          {existingImages.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {existingImages.map((img) => (
+                <div key={img.id} className="relative w-20 h-20 rounded-lg overflow-hidden group">
+                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeExistingImage(img.id)}
+                    className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={16} className="text-brand" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* New files */}
+          <label className={cn(
+            "flex flex-col items-center justify-center gap-2 border-2 border-dashed border-line rounded-lg p-6 cursor-pointer",
+            "hover:border-muted transition-colors"
+          )}>
+            <Upload size={20} className="text-muted" />
+            <span className="text-[10px] font-mono text-muted uppercase tracking-wider">
+              {t("admin_upload_images")}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="sr-only"
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                setImageFiles((p) => [...p, ...files]);
+              }}
+            />
+          </label>
+          {imageFiles.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {imageFiles.map((f, i) => (
+                <div key={i} className="flex items-center gap-1 bg-panel-2 border border-line px-2 py-1 rounded-md">
+                  <span className="text-[10px] font-mono text-muted">{f.name}</span>
+                  <button type="button" onClick={() => setImageFiles((p) => p.filter((_, j) => j !== i))} className="text-muted hover:text-brand">
+                    <X size={10} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </BentoPanel>
+
+        {/* Submit */}
+        <div className="flex gap-3 justify-end">
+          <Button type="button" variant="ghost" onClick={() => navigate("/admin/products")}>
+            {t("admin_cancel")}
+          </Button>
+          <Button type="submit" size="lg" disabled={isSubmitting || save.isPending || uploading}>
+            {(isSubmitting || save.isPending || uploading) ? "…" : t("admin_save")}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}

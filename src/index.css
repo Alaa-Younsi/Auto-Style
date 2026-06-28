@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    background-color: #0A0A0B;
+    color: #F4F4F5;
+    scroll-behavior: smooth;
+  }
+
+  /* Default to mono font for LTR, Arabic font when RTL */
+  body {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    background-color: #0A0A0B;
+    color: #F4F4F5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100dvh;
+  }
+
+  html[lang="ar"] body,
+  html[dir="rtl"] body {
+    font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0A0A0B;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #26262A;
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #E11D2A;
+  }
+
+  /* Selection color */
+  ::selection {
+    background-color: rgba(225, 29, 42, 0.35);
+    color: #F4F4F5;
+  }
+
+  /* Remove default focus ring, use custom */
+  *:focus-visible {
+    outline: 2px solid #E11D2A;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  /* Concave notch helper — creates the bento panel corner cut */
+  .notch-tl::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 28px;
+    height: 28px;
+    background: #0A0A0B;
+    border-bottom-right-radius: 28px;
+  }
+
+  .notch-tr::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 28px;
+    height: 28px;
+    background: #0A0A0B;
+    border-bottom-left-radius: 28px;
+  }
+
+  /* Gradient text utility */
+  .text-gradient {
+    background: linear-gradient(135deg, #F4F4F5 0%, #8A8A90 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Brand glow for active/hover accents */
+  .glow-brand {
+    box-shadow: 0 0 40px -8px rgba(225, 29, 42, 0.45);
+  }
+
+  /* Hide scrollbar but keep scroll */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
