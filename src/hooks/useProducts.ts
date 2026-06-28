@@ -10,6 +10,7 @@ export function useProducts(opts?: {
 }) {
   return useQuery({
     queryKey: ["products", opts],
+    retry: 0,
     queryFn: async () => {
       let query = supabase
         .from("products")
@@ -36,6 +37,7 @@ export function useProducts(opts?: {
 export function useProduct(slug: string) {
   return useQuery({
     queryKey: ["product", slug],
+    retry: 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")

@@ -12,7 +12,9 @@ import { BentoPanel } from "@/components/ui/BentoPanel";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import type { ProductColor, ProductSize } from "@/types/db";
+import type { Product, ProductColor, ProductImage, ProductSize } from "@/types/db";
+
+type ProductRow = Product & { product_images: ProductImage[] };
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
@@ -65,8 +67,7 @@ export function AdminProductForm() {
         .eq("id", id!)
         .single();
       if (error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return data as any;
+      return data as ProductRow;
     },
   });
 
@@ -131,16 +132,13 @@ export function AdminProductForm() {
       if (isNew) {
         const { data, error } = await supabase
           .from("products")
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .insert(payload as any)
+          .insert(payload)
           .select("id")
           .single();
         if (error) throw error;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        productId = (data as any).id as string;
+        productId = (data as { id: string }).id;
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await supabase.from("products").update(payload as any).eq("id", id!);
+        const { error } = await supabase.from("products").update(payload).eq("id", id!);
         if (error) throw error;
       }
 
@@ -162,8 +160,7 @@ export function AdminProductForm() {
           url: urlData.publicUrl,
           alt: vals.name_fr,
           sort_order: existingImages.length,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any);
+        });
       }
 
       setUploading(false);
@@ -400,6 +397,11 @@ export function AdminProductForm() {
         </BentoPanel>
 
         {/* Submit */}
+        {save.isError && (
+          <p className="text-[10px] font-mono text-brand text-end px-1">
+            {(save.error as Error)?.message ?? "Erreur lors de la sauvegarde. Veuillez réessayer."}
+          </p>
+        )}
         <div className="flex gap-3 justify-end">
           <Button type="button" variant="ghost" onClick={() => navigate("/admin/products")}>
             {t("admin_cancel")}

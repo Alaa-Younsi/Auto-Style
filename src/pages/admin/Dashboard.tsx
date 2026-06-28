@@ -7,7 +7,10 @@ import { formatPrice, formatDate } from "@/lib/format";
 import { BentoPanel } from "@/components/ui/BentoPanel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
-import type { Order } from "@/types/db";
+import type { Order, OrderStatus } from "@/types/db";
+
+type OrderStat = { total: number | null; status: OrderStatus };
+type ProductStat = { status: string; stock: number; featured: boolean };
 
 function useAdminStats() {
   return useQuery({
@@ -23,10 +26,8 @@ function useAdminStats() {
           .limit(5),
       ]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const orders = (ordersRes.data ?? []) as any[];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const products = (productsRes.data ?? []) as any[];
+      const orders = (ordersRes.data ?? []) as OrderStat[];
+      const products = (productsRes.data ?? []) as ProductStat[];
       const recent = (recentRes.data ?? []) as Order[];
 
       const revenue = orders

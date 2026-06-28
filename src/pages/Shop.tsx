@@ -86,7 +86,7 @@ export function Shop() {
             ))}
           </select>
 
-          {/* Filter toggle (mobile) */}
+          {/* Filter toggle */}
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={cn(

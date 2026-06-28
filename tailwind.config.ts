@@ -5,22 +5,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: "#0A0A0B",
-        panel: "#111113",
-        "panel-2": "#161618",
-        line: "#26262A",
-        ink: "#F4F4F5",
-        muted: "#8A8A90",
+        bg: "rgb(var(--c-bg) / <alpha-value>)",
+        panel: "rgb(var(--c-panel) / <alpha-value>)",
+        "panel-2": "rgb(var(--c-panel-2) / <alpha-value>)",
+        line: "rgb(var(--c-line) / <alpha-value>)",
+        ink: "rgb(var(--c-ink) / <alpha-value>)",
+        muted: "rgb(var(--c-muted) / <alpha-value>)",
         brand: {
-          DEFAULT: "#E11D2A",
+          DEFAULT: "rgb(var(--c-brand) / <alpha-value>)",
           dark: "#B5121E",
           light: "#F2434F",
         },
       },
       fontFamily: {
-        mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+        mono: ["Rajdhani", "ui-sans-serif", "system-ui", "sans-serif"],
         ar: ["IBM Plex Sans Arabic", "system-ui", "sans-serif"],
-        display: ["IBM Plex Mono", "ui-monospace", "monospace"],
+        display: ["Rajdhani", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       borderRadius: {
         bento: "28px",

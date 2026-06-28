@@ -45,7 +45,7 @@ export function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <BentoPanel className="w-full max-w-sm p-8 flex flex-col gap-6">
         <div className="flex flex-col items-center gap-4">
-          <img src={logo} alt="Auto Style" className="h-12 w-auto" />
+          <img src={logo} alt="Auto Style" className="h-14 w-auto" />
           <h1 className="font-mono text-xs uppercase tracking-widest text-muted">
             {t("admin_login_title")}
           </h1>

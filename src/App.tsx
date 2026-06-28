@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
+import { ThemeProvider } from "@/theme/ThemeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/layout/CartDrawer";
@@ -18,7 +19,6 @@ import { AdminProductForm } from "@/pages/admin/ProductForm";
 import { AdminCategories } from "@/pages/admin/Categories";
 import { AdminOrders } from "@/pages/admin/Orders";
 import { AdminOrderDetail } from "@/pages/admin/OrderDetail";
-import { AdminPreview } from "@/pages/admin/AdminPreview";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +32,7 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <LanguageProvider>
         <BrowserRouter>
           <Header />
@@ -45,9 +46,6 @@ export default function App() {
               <Route path="/product/:slug" element={<Product />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order/:orderNumber" element={<OrderConfirmation />} />
-
-              {/* Admin preview (public demo) */}
-              <Route path="/admin/preview" element={<AdminPreview />} />
 
               {/* Admin */}
               <Route path="/admin/login" element={<AdminLogin />} />
@@ -69,6 +67,7 @@ export default function App() {
           <Footer />
         </BrowserRouter>
       </LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

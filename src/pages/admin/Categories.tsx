@@ -59,18 +59,30 @@ export function AdminCategories() {
 
   const upsert = useMutation({
     mutationFn: async (vals: FormValues) => {
+      const baseData = {
+        name_fr: vals.name_fr,
+        name_ar: vals.name_ar,
+        description_fr: vals.description_fr || null,
+        description_ar: vals.description_ar || null,
+        image_url: vals.image_url || null,
+        sort_order: vals.sort_order,
+      };
       if (editing) {
         const { error } = await supabase
           .from("categories")
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .update({ ...vals, image_url: vals.image_url || null } as any)
+          .update(baseData)
           .eq("id", editing.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("categories")
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .insert({ ...vals, image_url: vals.image_url || null, slug: vals.name_fr.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") } as any);
+          .insert({
+            ...baseData,
+            slug: vals.name_fr
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/[^a-z0-9-]/g, ""),
+          });
         if (error) throw error;
       }
     },
@@ -143,6 +155,11 @@ export function AdminCategories() {
               <Input label={t("admin_image_url")} placeholder="https://…" {...register("image_url")} />
               <Input label={t("admin_sort_order")} type="number" {...register("sort_order")} />
             </div>
+            {upsert.isError && (
+              <p className="text-[10px] font-mono text-brand text-end">
+                {(upsert.error as Error)?.message ?? "Erreur. Veuillez réessayer."}
+              </p>
+            )}
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="ghost" size="sm" onClick={() => { setShowForm(false); setEditing(null); reset(); }}>
                 {t("admin_cancel")}

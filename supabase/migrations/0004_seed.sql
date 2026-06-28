@@ -33,7 +33,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- 2. Housse de volant
 WITH cat AS (SELECT id FROM categories WHERE slug='interieur')
-INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
+INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, compare_at_price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
 ('housse-volant-sport', 'Housse Volant Sport', 'غطاء مقود رياضي',
  'Housse en cuir synthétique respirant pour un grip parfait.',
  'غطاء من الجلد الصناعي المسامي لمسكة مثالية.',
@@ -63,7 +63,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- 4. Barre LED
 WITH cat AS (SELECT id FROM categories WHERE slug='eclairage')
-INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
+INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, compare_at_price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
 ('barre-led-tout-terrain', 'Barre LED Tout-Terrain 50cm', 'بار LED للطرق الوعرة 50سم',
  'Barre lumineuse haute puissance pour 4×4 et SUV.',
  'بار ضوئي عالي الطاقة للسيارات الرباعية والـSUV.',
@@ -93,7 +93,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- 6. Kit entretien
 WITH cat AS (SELECT id FROM categories WHERE slug='entretien')
-INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
+INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, compare_at_price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
 ('kit-entretien-pro', 'Kit Entretien Pro 5 en 1', 'طقم صيانة احترافي 5 في 1',
  'Kit complet pour l''entretien intérieur et extérieur de votre véhicule.',
  'طقم شامل لصيانة السيارة من الداخل والخارج.',
@@ -108,7 +108,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- 7. Porte-gobelet
 WITH cat AS (SELECT id FROM categories WHERE slug='interieur')
-INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
+INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, compare_at_price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
 ('porte-gobelet-universel', 'Porte-gobelet Universel', 'حامل أكواب عالمي',
  'Porte-gobelet double extensible pour console centrale ou fenêtre.',
  'حامل أكواب مزدوج قابل للتمديد للكونسول أو النافذة.',
@@ -138,7 +138,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- 9. Support téléphone
 WITH cat AS (SELECT id FROM categories WHERE slug='accessoires')
-INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
+INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, compare_at_price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
 ('support-telephone-magnetique', 'Support Téléphone Magnétique', 'حامل هاتف مغناطيسي',
  'Support magnétique puissant pour tableau de bord ou grille d''aération.',
  'حامل مغناطيسي قوي للوحة القيادة أو فتحة التهوية.',
@@ -153,7 +153,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- 10. Coussin lombaire
 WITH cat AS (SELECT id FROM categories WHERE slug='interieur')
-INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
+INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, compare_at_price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
 ('coussin-lombaire-sport', 'Coussin Lombaire Sport', 'وسادة قطنية رياضية',
  'Coussin de soutien lombaire en mémoire de forme pour longs trajets.',
  'وسادة دعم أسفل الظهر بذاكرة الشكل للرحلات الطويلة.',
@@ -183,7 +183,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- 12. Organisateur coffre
 WITH cat AS (SELECT id FROM categories WHERE slug='accessoires')
-INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
+INSERT INTO products (slug, name_fr, name_ar, description_fr, description_ar, details_fr, details_ar, price, compare_at_price, category_id, stock, style_code, colors, sizes, featured, status) VALUES
 ('organisateur-coffre', 'Organisateur Coffre Pliable', 'منظم صندوق السيارة القابل للطي',
  'Organisateur de coffre rigide avec compartiments multiples.',
  'منظم صندوق قوي مع أقسام متعددة.',

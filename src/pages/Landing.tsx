@@ -1,22 +1,20 @@
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   motion,
   useScroll,
   useTransform,
   useInView,
-  AnimatePresence,
 } from "framer-motion";
 import { ArrowRight, Star, ChevronRight } from "lucide-react";
 import { useLang } from "@/i18n/LanguageProvider";
-import { useCartStore } from "@/store/cart";
-import { formatPrice } from "@/lib/format";
+import { useProducts } from "@/hooks/useProducts";
 import { Button } from "@/components/ui/Button";
 import { BentoPanel } from "@/components/ui/BentoPanel";
 import { Marquee } from "@/components/ui/Marquee";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { ProductCard } from "@/components/product/ProductCard";
 import logo from "@/assets/auto-style-logo.png";
-import { MOCK_PRODUCTS } from "@/data/mockProducts";
 import { cn } from "@/lib/utils";
 
 /* ─── SVG ICONS ─────────────────────────────────────────────────────────── */
@@ -248,131 +246,6 @@ function FloatingBadge({ label, price, delay, x, y }: { label: string; price: st
   );
 }
 
-/* ─── MOCK PRODUCT CARD (Landing) ─────────────────────────────────────────── */
-function MockProductCard({ product, index }: { product: typeof MOCK_PRODUCTS[0]; index: number }) {
-  const { lang } = useLang();
-  const addItem = useCartStore((s) => s.addItem);
-  const openCart = useCartStore((s) => s.openCart);
-  const [hovered, setHovered] = useState(false);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const name = lang === "ar" ? product.name_ar : product.name_fr;
-  const isOnSale = product.compare_at_price !== null;
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    setTilt({ x: (y - 0.5) * -10, y: (x - 0.5) * 10 });
-    setGlowPos({ x: x * 100, y: y * 100 });
-  };
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
-    setGlowPos({ x: 50, y: 50 });
-    setHovered(false);
-  };
-
-  return (
-    <motion.div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onMouseEnter={() => setHovered(true)}
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-      animate={{ rotateX: tilt.x, rotateY: tilt.y }}
-      style={{ transformStyle: "preserve-3d", perspective: "800px" }}
-    >
-      <Link to={`/product/${product.slug}`}>
-        <div
-          className={cn(
-            "relative bg-panel border rounded-bento overflow-hidden transition-all duration-300 h-full flex flex-col",
-            hovered ? "border-brand/50 shadow-glow" : "border-line/40"
-          )}
-        >
-          {/* Glow overlay */}
-          <div
-            className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none z-10"
-            style={{
-              opacity: hovered ? 0.25 : 0,
-              background: `radial-gradient(circle at ${glowPos.x}% ${glowPos.y}%, rgba(225,29,42,0.7), transparent 60%)`,
-            }}
-          />
-
-          {/* Badge */}
-          {product.badge && (
-            <span className="absolute top-3 left-3 z-20 bg-brand text-ink text-[9px] font-mono uppercase tracking-widest px-2 py-1 rounded-md">
-              {product.badge}
-            </span>
-          )}
-
-          {/* Image */}
-          <div className="aspect-square overflow-hidden bg-panel-2 relative">
-            <motion.img
-              src={product.image}
-              alt={name}
-              className="w-full h-full object-cover"
-              animate={{ scale: hovered ? 1.08 : 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            />
-            {/* Add to cart overlay */}
-            <AnimatePresence>
-              {hovered && (
-                <motion.button
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addItem({ productId: product.id, slug: product.slug, name_fr: product.name_fr, name_ar: product.name_ar, price: product.price, image: product.image, color: null, size: null });
-                    openCart();
-                  }}
-                  className="absolute bottom-3 right-3 w-9 h-9 bg-brand hover:bg-brand-light rounded-full flex items-center justify-center shadow-glow transition-colors"
-                >
-                  <svg viewBox="0 0 20 20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
-                    <path d="M4 4h2l1 8h8l1-5H6"/>
-                    <circle cx="9" cy="17" r="1.5" fill="white" stroke="none"/>
-                    <circle cx="15" cy="17" r="1.5" fill="white" stroke="none"/>
-                    <path d="M10 8v4M8 10h4" strokeWidth="1.5"/>
-                  </svg>
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Info */}
-          <div className="p-4 flex flex-col gap-1.5 flex-1">
-            <span className={cn(
-              "text-[9px] font-mono text-muted/60 uppercase tracking-widest",
-              lang === "ar" && "font-ar text-[10px]"
-            )}>
-              {lang === "ar" ? product.category_ar : product.category_fr}
-            </span>
-            <p className={cn(
-              "text-xs font-mono text-ink uppercase tracking-wide leading-snug line-clamp-2",
-              lang === "ar" && "font-ar text-sm normal-case tracking-normal"
-            )}>
-              {name}
-            </p>
-            <div className="flex items-center gap-2 mt-auto pt-2">
-              <span className="text-brand font-mono text-sm font-semibold">{formatPrice(product.price)}</span>
-              {isOnSale && product.compare_at_price && (
-                <span className="text-muted font-mono text-[10px] line-through">{formatPrice(product.compare_at_price)}</span>
-              )}
-            </div>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  );
-}
 
 /* ─── SECTION HEADER ──────────────────────────────────────────────────────── */
 function SectionHeader({ tag, title, subtitle }: { tag: string; title: string; subtitle?: string }) {
@@ -400,6 +273,7 @@ function SectionHeader({ tag, title, subtitle }: { tag: string; title: string; s
 /* ─── MAIN PAGE ───────────────────────────────────────────────────────────── */
 export function Landing() {
   const { t, lang } = useLang();
+  const { data: featuredProducts } = useProducts({ featured: true, limit: 8 });
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const bgY = useTransform(scrollYProgress, [0, 1], [0, 120]);
@@ -602,13 +476,13 @@ export function Landing() {
             {/* Headline */}
             <div className="flex flex-col gap-0 overflow-hidden">
               {[
-                { text: lang === "ar" ? "جهِّز" : "ÉQUIPEZ", style: "text-ink", size: "text-[clamp(3rem,8vw,6.5rem)]" },
-                { text: lang === "ar" ? "سيارتك" : "VOTRE", style: "text-ink", size: "text-[clamp(4rem,10vw,8.5rem)]" },
-                { text: lang === "ar" ? "الآن" : "VOITURE", style: "text-brand", size: "text-[clamp(4rem,10vw,8.5rem)]" },
+                { text: lang === "ar" ? "جهِّز" : "ÉQUIPEZ", style: "text-ink", size: "text-[clamp(2.2rem,5vw,4rem)]" },
+                { text: lang === "ar" ? "سيارتك" : "VOTRE", style: "text-ink", size: "text-[clamp(2.8rem,6.5vw,5.5rem)]" },
+                { text: lang === "ar" ? "الآن" : "VOITURE", style: "text-brand", size: "text-[clamp(2.8rem,6.5vw,5.5rem)]" },
               ].map(({ text, style, size }, i) => (
                 <motion.span
                   key={text}
-                  className={cn("font-mono font-black uppercase leading-[0.9] tracking-tighter block", style, size, lang === "ar" && "font-ar")}
+                  className={cn("font-mono font-bold uppercase leading-[0.95] tracking-tight block", style, size, lang === "ar" && "font-ar")}
                   initial={{ opacity: 0, y: 60 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.7, delay: 0.2 + i * 0.12, ease: [0.23, 1, 0.32, 1] }}
@@ -648,33 +522,57 @@ export function Landing() {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                 </motion.button>
               </Link>
-              <Link to="/admin/preview">
-                <motion.button
-                  className="flex items-center gap-2 border border-line/60 hover:border-brand/50 text-muted hover:text-ink font-mono text-xs uppercase tracking-widest px-6 py-4 rounded-lg transition-all duration-200"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  {lang === "ar" ? "لوحة التحكم" : "Voir le dashboard"}
-                  <ChevronRight size={12} />
-                </motion.button>
-              </Link>
             </motion.div>
 
             {/* Trust badges */}
             <motion.div
-              className="flex items-center gap-5 flex-wrap"
+              className="flex items-center gap-3 flex-wrap"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.75 }}
             >
               {[
-                { icon: "⭐", text: lang === "ar" ? "4.9 تقييم" : "4.9 Étoiles" },
-                { icon: "✓", text: lang === "ar" ? "+1 200 عميل" : "+1 200 Clients" },
-                { icon: "🔒", text: lang === "ar" ? "دفع آمن" : "100% Sécurisé" },
-              ].map(({ icon, text }) => (
-                <span key={text} className="flex items-center gap-1.5 text-[10px] font-mono text-muted/70">
-                  <span className="text-xs">{icon}</span>
-                  {text}
-                </span>
+                {
+                  icon: (
+                    <svg viewBox="0 0 32 32" className="w-7 h-7 text-yellow-400" fill="currentColor">
+                      <path d="M16 2l3.6 7.4 8.1 1.2-5.9 5.7 1.4 8.1L16 20.8l-7.2 3.6 1.4-8.1L4.3 10.6l8.1-1.2L16 2z"/>
+                    </svg>
+                  ),
+                  label: lang === "ar" ? "4.9 تقييم" : "4.9 Étoiles",
+                  sub: lang === "ar" ? "تقييم العملاء" : "Avis clients",
+                  accent: "text-yellow-400",
+                },
+                {
+                  icon: (
+                    <svg viewBox="0 0 32 32" className="w-7 h-7 text-brand" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="16" cy="16" r="13"/>
+                      <path d="M10 16.5l4 4 8-8"/>
+                    </svg>
+                  ),
+                  label: lang === "ar" ? "+1 200 عميل" : "+1 200 Clients",
+                  sub: lang === "ar" ? "عملاء راضون" : "Satisfaits",
+                  accent: "text-brand",
+                },
+                {
+                  icon: (
+                    <svg viewBox="0 0 32 32" className="w-7 h-7 text-ink/60" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="6" y="14" width="20" height="14" rx="3"/>
+                      <path d="M10 14v-3a6 6 0 0 1 12 0v3"/>
+                      <circle cx="16" cy="21" r="2" fill="currentColor" stroke="none"/>
+                    </svg>
+                  ),
+                  label: lang === "ar" ? "دفع آمن" : "100% Sécurisé",
+                  sub: lang === "ar" ? "الدفع عند الاستلام" : "Paiement livraison",
+                  accent: "text-ink/60",
+                },
+              ].map(({ icon, label, sub, accent }) => (
+                <div key={label} className="flex items-center gap-2.5 bg-panel/50 border border-line/40 rounded-xl px-3 py-2">
+                  <span className={accent}>{icon}</span>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-bold font-mono text-ink uppercase tracking-wide leading-none">{label}</span>
+                    <span className="text-[9px] font-mono text-muted/60 mt-0.5 leading-none">{sub}</span>
+                  </div>
+                </div>
               ))}
             </motion.div>
           </motion.div>
@@ -770,8 +668,8 @@ export function Landing() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {MOCK_PRODUCTS.slice(0, 8).map((p, i) => (
-            <MockProductCard key={p.id} product={p} index={i} />
+          {(featuredProducts ?? []).map((p) => (
+            <ProductCard key={p.id} product={p} />
           ))}
         </div>
 
@@ -939,109 +837,6 @@ export function Landing() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════ ADMIN PREVIEW TEASER */}
-      <section className="border-t border-line/30 bg-panel/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="flex flex-col gap-5"
-            >
-              <span className="text-[9px] font-mono uppercase tracking-[0.4em] text-brand">
-                {lang === "ar" ? "لوحة التحكم" : "Dashboard propriétaire"}
-              </span>
-              <h2 className={cn("font-mono font-black text-3xl sm:text-5xl uppercase tracking-tight text-ink leading-none", lang === "ar" && "font-ar text-3xl normal-case tracking-normal")}>
-                {lang === "ar" ? "تحكم كامل\nفي متجرك" : "GÉREZ VOTRE\nBOUTIQUE"}
-              </h2>
-              <p className={cn("text-sm text-muted font-mono leading-relaxed max-w-sm", lang === "ar" && "font-ar text-base")}>
-                {lang === "ar"
-                  ? "لوحة تحكم متكاملة لإدارة المنتجات، الطلبات، الفئات والإحصائيات — كل شيء في مكان واحد."
-                  : "Tableau de bord complet pour gérer vos produits, commandes, catégories et statistiques — tout en un seul endroit."}
-              </p>
-              <ul className="flex flex-col gap-2">
-                {[
-                  lang === "ar" ? "إدارة المنتجات والصور" : "Gestion produits & images",
-                  lang === "ar" ? "تتبع الطلبات في الوقت الحقيقي" : "Suivi commandes en temps réel",
-                  lang === "ar" ? "إحصائيات المبيعات" : "Statistiques de ventes",
-                  lang === "ar" ? "إدارة الفئات" : "Gestion des catégories",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-xs font-mono text-muted">
-                    <div className="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/admin/preview">
-                <Button size="lg" variant="outline" className="mt-2 w-fit">
-                  {lang === "ar" ? "عرض توضيحي" : "Voir la démo"} <ArrowRight size={13} />
-                </Button>
-              </Link>
-            </motion.div>
-
-            {/* Admin dashboard mockup */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="relative"
-            >
-              <div className="rounded-bento-lg border border-line/40 overflow-hidden bg-panel shadow-panel">
-                {/* Mockup header */}
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-line/40 bg-bg/50">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-brand/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-400/60" />
-                  </div>
-                  <div className="mx-auto flex-1 max-w-[160px] h-5 bg-panel-2 rounded border border-line/30 flex items-center justify-center">
-                    <span className="text-[9px] font-mono text-muted/50">admin.autostyle.dz</span>
-                  </div>
-                </div>
-                {/* Mockup content */}
-                <div className="flex">
-                  {/* Sidebar */}
-                  <div className="w-28 border-r border-line/30 p-3 flex flex-col gap-1.5 bg-panel">
-                    {["Dashboard", "Produits", "Catégories", "Commandes"].map((item, i) => (
-                      <div key={item} className={cn("px-2.5 py-2 rounded-lg text-[9px] font-mono", i === 0 ? "bg-brand/10 text-brand" : "text-muted/50")}>
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                  {/* Main */}
-                  <div className="flex-1 p-4 flex flex-col gap-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      {[{ label: "Commandes", val: "128", color: "text-ink" }, { label: "Revenu", val: "485 200 DA", color: "text-brand" }, { label: "Produits", val: "47", color: "text-ink" }, { label: "Stock faible", val: "3", color: "text-brand" }].map(({ label, val, color }) => (
-                        <div key={label} className="bg-panel-2 rounded-lg p-2.5 border border-line/30">
-                          <p className={cn("text-xs font-mono font-bold", color)}>{val}</p>
-                          <p className="text-[8px] font-mono text-muted/60 uppercase">{label}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="bg-panel-2 rounded-lg border border-line/30 p-2.5">
-                      <p className="text-[8px] font-mono text-muted/60 uppercase mb-2">Dernières commandes</p>
-                      {["AS-20240628-A4F2E", "AS-20240628-B3C1D", "AS-20240627-F8E5A"].map((num, i) => (
-                        <div key={num} className="flex justify-between py-1 border-b border-line/20 last:border-0">
-                          <span className="text-[9px] font-mono text-brand">{num}</span>
-                          <span className={cn("text-[9px] font-mono", i === 0 ? "text-yellow-400" : "text-brand")}>
-                            {["En attente", "Confirmée", "Livrée"][i]}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* Glow behind mockup */}
-              <div className="absolute -inset-4 bg-brand/5 blur-[60px] -z-10 rounded-bento-lg" />
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* ══════════════════════════════════════════════════════ FINAL CTA */}
       <section className="relative overflow-hidden border-t border-line/30">
         {/* Background */}
@@ -1053,7 +848,7 @@ export function Landing() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-brand/10 blur-[100px] rounded-full" />
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-24 text-center flex flex-col items-center gap-8">
-          <img src={logo} alt="Auto Style" className="h-16 w-auto opacity-90" />
+          <img src={logo} alt="Auto Style" className="h-20 w-auto" style={{ filter: "drop-shadow(0 0 20px rgba(225,29,42,0.4))" }} />
           <h2 className={cn("font-mono font-black text-4xl sm:text-6xl uppercase tracking-tight leading-none", lang === "ar" && "font-ar text-4xl normal-case tracking-normal")}>
             {lang === "ar"
               ? <><span className="text-ink">سيارتك</span><br /><span className="text-brand">تستحق الأفضل</span></>
