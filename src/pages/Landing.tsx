@@ -95,134 +95,367 @@ function IconPhone() {
 }
 
 /* ─── HERO CAR SVG ─────────────────────────────────────────────────────── */
-function CarSVG() {
+function Wheel({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const spokes = 5;
+  const innerR = r * 0.62;
+  const hubR = r * 0.22;
   return (
-    <svg
-      viewBox="0 0 900 380"
-      fill="none"
-      className="w-full h-full"
-      style={{ filter: "drop-shadow(0 0 30px rgba(225,29,42,0.5))" }}
-    >
+    <g>
+      {/* Tyre */}
+      <circle cx={cx} cy={cy} r={r} fill="#0f0f10" />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
+      {/* Tyre sidewall highlight */}
+      <circle cx={cx} cy={cy} r={r - 5} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="3" />
+      {/* Alloy rim */}
+      <circle cx={cx} cy={cy} r={innerR} fill="#1c1c1e" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
+      {/* 5-spoke alloy */}
+      {Array.from({ length: spokes }).map((_, i) => {
+        const a = (i * 360) / spokes;
+        const ra = (a * Math.PI) / 180;
+        const ra2 = ((a + 22) * Math.PI) / 180;
+        const x1 = cx + hubR * Math.cos(ra);
+        const y1 = cy + hubR * Math.sin(ra);
+        const x2 = cx + (innerR - 4) * Math.cos(ra);
+        const y2 = cy + (innerR - 4) * Math.sin(ra);
+        const x3 = cx + (innerR - 4) * Math.cos(ra2);
+        const y3 = cy + (innerR - 4) * Math.sin(ra2);
+        const xh2 = cx + hubR * Math.cos(ra2);
+        const yh2 = cy + hubR * Math.sin(ra2);
+        return (
+          <g key={i}>
+            <path d={`M${x1},${y1} L${x2},${y2} L${x3},${y3} L${xh2},${yh2} Z`}
+              fill="#2a2a2e" stroke="rgba(255,255,255,0.22)" strokeWidth="0.8" />
+            {/* Spoke highlight */}
+            <line x1={cx + (hubR+4) * Math.cos(ra+0.1)} y1={cy + (hubR+4) * Math.sin(ra+0.1)}
+              x2={cx + (innerR-8) * Math.cos(ra+0.1)} y2={cy + (innerR-8) * Math.sin(ra+0.1)}
+              stroke="rgba(255,255,255,0.3)" strokeWidth="0.8" />
+          </g>
+        );
+      })}
+      {/* Hub cap */}
+      <circle cx={cx} cy={cy} r={hubR} fill="#141416" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+      <circle cx={cx} cy={cy} r={hubR * 0.55} fill="#E11D2A" />
+      <circle cx={cx} cy={cy} r={hubR * 0.28} fill="#8B0F18" />
+      {/* Brake disc visible between spokes */}
+      <circle cx={cx} cy={cy} r={innerR * 0.85} fill="none" stroke="rgba(180,50,50,0.15)" strokeWidth="4" />
+    </g>
+  );
+}
+
+function CarSVG() {
+  const W = 960, H = 420;
+  const groundY = 360;
+  const wx1 = 238, wx2 = 700, wy = groundY - 72, wr = 72;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} fill="none" className="w-full h-full"
+      style={{ filter: "drop-shadow(0 24px 60px rgba(225,29,42,0.4))" }}>
       <defs>
-        <linearGradient id="carGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#E11D2A" stopOpacity="0.4" />
-          <stop offset="50%" stopColor="#F4F4F5" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#E11D2A" stopOpacity="0.3" />
+        {/* Body main — dark metallic charcoal */}
+        <linearGradient id="bodyTop" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#3a3a3e" stopOpacity="1" />
+          <stop offset="40%" stopColor="#28282c" stopOpacity="1" />
+          <stop offset="100%" stopColor="#111114" stopOpacity="1" />
         </linearGradient>
-        <filter id="carGlow">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        {/* Body reflection band */}
+        <linearGradient id="bodyReflect" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+          <stop offset="35%" stopColor="rgba(255,255,255,0.08)" />
+          <stop offset="55%" stopColor="rgba(255,255,255,0.03)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        </linearGradient>
+        {/* Hood highlight */}
+        <linearGradient id="hoodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#4a4a50" />
+          <stop offset="50%" stopColor="#2e2e32" />
+          <stop offset="100%" stopColor="#1a1a1e" />
+        </linearGradient>
+        {/* Window glass */}
+        <linearGradient id="glassGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+          <stop offset="0%" stopColor="#0d1a2e" />
+          <stop offset="40%" stopColor="#0a1220" />
+          <stop offset="100%" stopColor="#060c18" />
+        </linearGradient>
+        {/* Headlight */}
+        <radialGradient id="headlightGrad" cx="30%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+          <stop offset="50%" stopColor="#ffe8cc" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#E11D2A" stopOpacity="0" />
+        </radialGradient>
+        {/* Shadow */}
+        <radialGradient id="shadowGrad" cx="50%" cy="0%" r="50%">
+          <stop offset="0%" stopColor="rgba(0,0,0,0.55)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+        {/* Reflection on ground */}
+        <linearGradient id="reflGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgba(50,50,55,0.35)" />
+          <stop offset="100%" stopColor="rgba(50,50,55,0)" />
+        </linearGradient>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="4" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
+        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="8" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        {/* Clip for reflection */}
+        <clipPath id="reflClip">
+          <rect x="60" y={groundY} width={W - 80} height="70" />
+        </clipPath>
       </defs>
 
-      {/* Ground reflection line */}
-      <line x1="60" y1="320" x2="840" y2="320" stroke="#E11D2A" strokeWidth="1" strokeOpacity="0.25" />
-      <line x1="100" y1="325" x2="800" y2="325" stroke="#E11D2A" strokeWidth="0.5" strokeOpacity="0.12" />
+      {/* ── Ground shadow ── */}
+      <ellipse cx={W / 2} cy={groundY + 8} rx="420" ry="22" fill="url(#shadowGrad)" />
 
-      {/* Car body */}
-      <path
-        d="M100,295 L100,278 C100,278 115,268 130,260 L165,248 C185,238 215,225 255,210 L320,158 C345,138 385,118 430,110 L500,108 C545,108 590,118 625,138 L680,168 C715,188 745,215 765,248 L790,268 C800,275 810,285 810,295 Z"
-        fill="url(#carGrad)"
-        stroke="rgba(244,244,245,0.2)"
-        strokeWidth="1"
-        filter="url(#carGlow)"
-      />
+      {/* ── Ground line ── */}
+      <line x1="50" y1={groundY} x2={W - 50} y2={groundY} stroke="rgba(225,29,42,0.18)" strokeWidth="1" />
 
-      {/* Roof / cabin */}
-      <path
-        d="M280,208 C310,178 365,138 430,120 L500,118 C545,118 588,132 618,152 L665,185 L620,205 L480,205 L345,205 Z"
-        fill="rgba(255,255,255,0.06)"
-        stroke="rgba(244,244,245,0.5)"
-        strokeWidth="1.5"
-        filter="url(#carGlow)"
-      />
+      {/* ── Reflection (mirrored car ghost) ── */}
+      <g clipPath="url(#reflClip)" opacity="0.18" transform={`scale(1,-1) translate(0,${-(groundY * 2)})`}>
+        {/* simplified body reflection */}
+        <path
+          d="M95,288 L118,268 C135,252 165,238 200,228 L258,210 C295,195 340,178 385,162 L440,118 C465,102 510,90 560,88 L630,90 C680,92 720,104 750,124 L800,155 C830,175 850,200 860,228 L875,255 C882,265 888,278 888,288 Z"
+          fill="url(#bodyTop)"
+        />
+      </g>
 
-      {/* Windshield highlight */}
+      {/* ── Main car body ── */}
+      {/* Lower body sill */}
       <path
-        d="M315,205 C340,175 385,148 430,136 L490,134 C525,134 560,148 585,168 L620,200 L480,202 L345,202 Z"
-        fill="rgba(255,255,255,0.04)"
-        stroke="rgba(244,244,245,0.7)"
+        d="M148,{wy} C170,{wy+8} 200,{wy+12} 238,{wy+14} L700,{wy+14} C740,{wy+12} 775,{wy+8} 800,{wy} L820,288 L840,{groundY} L100,{groundY} L105,288 Z"
+        fill="#111114"
+        stroke="rgba(255,255,255,0.06)"
         strokeWidth="1"
       />
 
-      {/* A-pillar & roof line detail */}
+      {/* Body side panel — main dark metallic */}
       <path
-        d="M280,208 L310,162 C330,138 375,116 430,110"
-        stroke="rgba(244,244,245,0.6)"
+        d="M95,288 L118,268 C135,252 165,238 200,228 L258,210 C295,195 340,178 385,162 L440,118 C465,102 510,90 560,88 L630,90 C680,92 720,104 750,124 L800,155 C830,175 850,200 860,228 L875,255 C882,265 888,278 888,288 Z"
+        fill="url(#bodyTop)"
+        stroke="rgba(255,255,255,0.06)"
+        strokeWidth="1"
+      />
+
+      {/* Body side — upper reflection band */}
+      <path
+        d="M95,288 L118,268 C135,252 165,238 200,228 L258,210 C295,195 340,178 385,162 L440,118 C465,102 510,90 560,88 L630,90 C680,92 720,104 750,124 L800,155 C830,175 850,200 860,228 L875,255 C882,265 888,278 888,288 Z"
+        fill="url(#bodyReflect)"
+      />
+
+      {/* ── Hood ── */}
+      <path
+        d="M385,162 C400,145 430,120 470,108 L560,88 C600,87 640,92 680,104 L750,124 C720,104 680,92 630,90 L560,88 L510,90 C475,92 448,105 430,118 Z"
+        fill="url(#hoodGrad)"
+        stroke="rgba(255,255,255,0.1)"
+        strokeWidth="1"
+      />
+      {/* Hood center ridge */}
+      <path
+        d="M490,90 C510,88 545,88 570,90 L740,124"
+        stroke="rgba(255,255,255,0.12)"
         strokeWidth="1.5"
         fill="none"
       />
+      {/* Hood highlight streak */}
       <path
-        d="M620,205 L655,185 C675,165 695,148 715,140"
-        stroke="rgba(244,244,245,0.5)"
-        strokeWidth="1.5"
+        d="M430,118 C455,100 495,89 545,88 L605,89 C645,90 680,98 720,114"
+        stroke="rgba(255,255,255,0.18)"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
+
+      {/* ── Roof ── */}
+      <path
+        d="M385,162 L440,118 C465,102 510,90 560,88 L630,90 C680,92 720,104 750,124"
+        fill="none"
+        stroke="rgba(255,255,255,0.1)"
+        strokeWidth="1"
+      />
+
+      {/* ── Windows ── */}
+      {/* Windshield */}
+      <path
+        d="M385,162 C400,145 430,120 470,108 L560,88 L440,118 C415,130 395,148 383,162 Z"
+        fill="url(#glassGrad)"
+        stroke="rgba(255,255,255,0.25)"
+        strokeWidth="1.2"
+      />
+      {/* Windshield inner reflection streaks */}
+      <path d="M415,155 C430,135 455,116 478,108" stroke="rgba(255,255,255,0.35)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M435,160 C452,140 475,120 500,110" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* Side window (main door) */}
+      <path
+        d="M265,206 C300,185 345,168 385,162 L440,118 L560,88 L630,90 C660,91 690,96 710,106 L750,124 L740,148 C720,138 695,128 665,126 L590,124 C548,122 510,122 480,126 L420,138 C395,148 370,162 350,180 L320,200 Z"
+        fill="url(#glassGrad)"
+        stroke="rgba(255,255,255,0.2)"
+        strokeWidth="1"
+      />
+      {/* Window highlights */}
+      <path d="M300,192 C330,172 365,158 400,152" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M480,130 C520,124 560,122 605,124 L650,128" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* Quarter window rear */}
+      <path
+        d="M725,132 C745,142 760,155 770,170 L760,176 C748,162 730,150 712,140 Z"
+        fill="url(#glassGrad)"
+        stroke="rgba(255,255,255,0.2)"
+        strokeWidth="1"
+      />
+
+      {/* B-pillar */}
+      <line x1="488" y1="127" x2="470" y2="210" stroke="rgba(30,30,34,0.9)" strokeWidth="7" />
+      <line x1="488" y1="127" x2="470" y2="210" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+
+      {/* ── Body character lines ── */}
+      {/* Main shoulder line — brand red */}
+      <path
+        d="M148,255 C185,248 230,240 278,234 L480,225 L680,228 C730,232 775,242 820,258"
+        stroke="#E11D2A"
+        strokeWidth="1.8"
+        fill="none"
+        filter="url(#glow)"
+      />
+      {/* Upper belt line */}
+      <path
+        d="M148,235 C190,228 240,220 295,214 L490,205 L680,208 C725,211 768,220 810,234"
+        stroke="rgba(255,255,255,0.14)"
+        strokeWidth="1"
+        fill="none"
+      />
+      {/* Lower sill line */}
+      <path
+        d="M148,280 C200,276 250,273 310,272 L650,272 C715,273 770,276 830,280"
+        stroke="rgba(255,255,255,0.07)"
+        strokeWidth="1"
         fill="none"
       />
 
-      {/* Door line */}
-      <line x1="460" y1="130" x2="455" y2="295" stroke="rgba(244,244,245,0.25)" strokeWidth="1" strokeDasharray="6,4" />
-
-      {/* Side skirt / body line */}
+      {/* ── Front fascia & bumper ── */}
       <path
-        d="M165,248 C230,240 360,235 455,235 L545,235 C650,235 740,248 790,268"
-        stroke="rgba(225,29,42,0.6)"
-        strokeWidth="1.5"
-        fill="none"
-        filter="url(#carGlow)"
+        d="M95,288 L118,268 C125,256 135,248 148,242 L158,230 L148,255 L130,278 L110,{groundY} Z"
+        fill="#0e0e11"
+        stroke="rgba(255,255,255,0.08)"
+        strokeWidth="1"
       />
-
-      {/* Front headlight */}
+      {/* Front grille opening */}
       <path
-        d="M108,260 L125,248 L145,252 L130,268 Z"
-        fill="rgba(225,29,42,0.3)"
+        d="M100,270 C108,260 118,252 130,248 L148,242 L140,258 C128,264 115,272 105,282 Z"
+        fill="#0a0a0c"
+        stroke="rgba(225,29,42,0.3)"
+        strokeWidth="1"
+      />
+      {/* Grille mesh hint */}
+      {[0,1,2].map(i => (
+        <line key={i}
+          x1={105 + i * 10} y1={268 - i * 5}
+          x2={105 + i * 10} y2={282 - i * 4}
+          stroke="rgba(225,29,42,0.2)" strokeWidth="1" />
+      ))}
+
+      {/* ── Front headlight assembly ── */}
+      <path
+        d="M118,248 L148,228 L155,235 L130,258 Z"
+        fill="#0e0e12"
+        stroke="#E11D2A"
+        strokeWidth="1.5"
+        filter="url(#glow)"
+      />
+      {/* DRL strip */}
+      <path d="M120,248 L148,230" stroke="#E11D2A" strokeWidth="3" strokeLinecap="round" filter="url(#glow)" />
+      <path d="M125,253 L150,236" stroke="#E11D2A" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+      {/* Headlight lens */}
+      <path
+        d="M120,248 L148,230 L153,235 L128,255 Z"
+        fill="url(#headlightGrad)"
+        opacity="0.6"
+      />
+      {/* Light beam */}
+      <path d="M100,252 L60,248 M98,258 L52,258 M100,264 L58,268"
+        stroke="#E11D2A" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" />
+
+      {/* ── Rear fascia ── */}
+      <path
+        d="M888,288 L875,255 L870,242 L878,260 L895,288 L880,{groundY} Z"
+        fill="#0e0e11"
+        stroke="rgba(255,255,255,0.06)"
+        strokeWidth="1"
+      />
+      {/* Rear diffuser */}
+      <path
+        d="M855,298 L898,298 L895,{groundY} L845,{groundY} Z"
+        fill="#090909"
+        stroke="rgba(225,29,42,0.2)"
+        strokeWidth="1"
+      />
+      {[0,1,2,3].map(i => (
+        <line key={i}
+          x1={855 + i * 12} y1={300}
+          x2={855 + i * 12} y2={groundY - 1}
+          stroke="rgba(225,29,42,0.15)" strokeWidth="1" />
+      ))}
+
+      {/* ── Rear LED taillight ── */}
+      <path
+        d="M855,200 L878,210 L880,245 L858,240 Z"
+        fill="#0e0e12"
         stroke="#E11D2A"
         strokeWidth="1"
       />
-      <line x1="118" y1="258" x2="80" y2="255" stroke="#E11D2A" strokeWidth="1" strokeOpacity="0.6" />
-      <line x1="118" y1="262" x2="70" y2="262" stroke="#E11D2A" strokeWidth="0.8" strokeOpacity="0.4" />
-      <line x1="118" y1="265" x2="75" y2="268" stroke="#E11D2A" strokeWidth="0.6" strokeOpacity="0.3" />
-
-      {/* Rear light */}
+      {/* LED strip */}
+      <path d="M858,242 L880,248" stroke="#E11D2A" strokeWidth="5" strokeLinecap="round" filter="url(#softGlow)" opacity="0.9" />
+      <path d="M857,232 L878,238" stroke="#E11D2A" strokeWidth="2.5" strokeLinecap="round" filter="url(#glow)" opacity="0.7" />
+      <path d="M858,222 L876,227" stroke="#E11D2A" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+      {/* Taillight inner glow */}
       <path
-        d="M795,258 L808,268 L805,280 L792,275 Z"
-        fill="rgba(225,29,42,0.4)"
-        stroke="#E11D2A"
+        d="M858,240 L880,246 L880,255 L857,248 Z"
+        fill="rgba(225,29,42,0.15)"
+      />
+
+      {/* ── Side mirror ── */}
+      <path
+        d="M268,210 L282,206 L285,218 L270,222 Z"
+        fill="#1e1e22"
+        stroke="rgba(255,255,255,0.15)"
         strokeWidth="1"
       />
 
-      {/* Front wheel */}
-      <circle cx="245" cy="295" r="65" fill="#111113" stroke="rgba(244,244,245,0.3)" strokeWidth="1.5" />
-      <circle cx="245" cy="295" r="48" fill="none" stroke="rgba(244,244,245,0.15)" strokeWidth="1" />
-      <circle cx="245" cy="295" r="28" fill="#161618" stroke="rgba(225,29,42,0.4)" strokeWidth="1.5" />
-      <circle cx="245" cy="295" r="10" fill="#E11D2A" strokeWidth="0" fillOpacity="0.7" />
-      {[0,60,120,180,240,300].map((angle) => (
-        <line
-          key={angle}
-          x1={245 + 28 * Math.cos((angle * Math.PI) / 180)}
-          y1={295 + 28 * Math.sin((angle * Math.PI) / 180)}
-          x2={245 + 48 * Math.cos((angle * Math.PI) / 180)}
-          y2={295 + 48 * Math.sin((angle * Math.PI) / 180)}
-          stroke="rgba(244,244,245,0.3)"
-          strokeWidth="1.5"
-        />
-      ))}
+      {/* ── Door handle (subtle) ── */}
+      <rect x="560" y="224" width="28" height="5" rx="2.5"
+        fill="#1a1a1e" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8" />
 
-      {/* Rear wheel */}
-      <circle cx="665" cy="295" r="65" fill="#111113" stroke="rgba(244,244,245,0.3)" strokeWidth="1.5" />
-      <circle cx="665" cy="295" r="48" fill="none" stroke="rgba(244,244,245,0.15)" strokeWidth="1" />
-      <circle cx="665" cy="295" r="28" fill="#161618" stroke="rgba(225,29,42,0.4)" strokeWidth="1.5" />
-      <circle cx="665" cy="295" r="10" fill="#E11D2A" strokeWidth="0" fillOpacity="0.7" />
-      {[0,60,120,180,240,300].map((angle) => (
-        <line
-          key={angle}
-          x1={665 + 28 * Math.cos((angle * Math.PI) / 180)}
-          y1={295 + 28 * Math.sin((angle * Math.PI) / 180)}
-          x2={665 + 48 * Math.cos((angle * Math.PI) / 180)}
-          y2={295 + 48 * Math.sin((angle * Math.PI) / 180)}
-          stroke="rgba(244,244,245,0.3)"
-          strokeWidth="1.5"
-        />
-      ))}
+      {/* ── Exhaust tips ── */}
+      <ellipse cx="840" cy={groundY - 4} rx="9" ry="5" fill="#111" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+      <ellipse cx="858" cy={groundY - 4} rx="9" ry="5" fill="#111" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+      <ellipse cx="840" cy={groundY - 4} rx="5" ry="3" fill="#1a0a0a" />
+      <ellipse cx="858" cy={groundY - 4} rx="5" ry="3" fill="#1a0a0a" />
+
+      {/* ── Front wheel arch ── */}
+      <path
+        d={`M${wx1 - wr - 12},${wy + 14} C${wx1 - wr - 8},${wy - 10} ${wx1 - wr + 20},${wy - wr - 20} ${wx1},${wy - wr - 5} C${wx1 + wr - 10},${wy - wr - 20} ${wx1 + wr + 5},${wy - 5} ${wx1 + wr + 10},${wy + 14}`}
+        fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1"
+      />
+      {/* ── Rear wheel arch ── */}
+      <path
+        d={`M${wx2 - wr - 10},${wy + 14} C${wx2 - wr - 5},${wy - 5} ${wx2 - wr + 10},${wy - wr - 20} ${wx2},${wy - wr - 5} C${wx2 + wr - 10},${wy - wr - 20} ${wx2 + wr + 5},${wy - 10} ${wx2 + wr + 8},${wy + 14}`}
+        fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1"
+      />
+
+      {/* ── Wheels ── */}
+      <Wheel cx={wx1} cy={wy} r={wr} />
+      <Wheel cx={wx2} cy={wy} r={wr} />
+
+      {/* Wheel arch shadow (over wheel top) */}
+      <ellipse cx={wx1} cy={wy - wr + 10} rx={wr + 4} ry="16" fill="rgba(0,0,0,0.45)" />
+      <ellipse cx={wx2} cy={wy - wr + 10} rx={wr + 4} ry="16" fill="rgba(0,0,0,0.45)" />
+
+      {/* ── Brand line accent behind car ── */}
+      <line x1="50" y1={groundY + 2} x2={W - 30} y2={groundY + 2}
+        stroke="#E11D2A" strokeWidth="0.5" strokeOpacity="0.3" />
+
     </svg>
   );
 }

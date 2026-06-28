@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 /* ── Theme tokens ── */
-:root {
+:root,
+html[data-theme="dark"] {
+  color-scheme: dark;
   --c-bg: 10 10 11;
   --c-panel: 17 17 19;
   --c-panel-2: 22 22 24;
@@ -14,6 +16,7 @@
 }
 
 html[data-theme="light"] {
+  color-scheme: light;
   --c-bg: 245 245 244;
   --c-panel: 255 255 255;
   --c-panel-2: 238 238 240;

@@ -28,7 +28,7 @@ export default {
       },
       boxShadow: {
         glow: "0 0 40px -8px rgba(225,29,42,0.45)",
-        panel: "0 1px 0 0 rgba(255,255,255,0.03) inset, 0 20px 50px -20px rgba(0,0,0,0.8)",
+        panel: "0 1px 0 0 rgba(128,128,128,0.06) inset, 0 8px 28px -8px rgba(0,0,0,0.35)",
       },
       keyframes: {
         spinSlow: {
