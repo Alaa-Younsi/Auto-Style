@@ -151,9 +151,18 @@ export function AdminProductForm() {
           .from("product-images")
           .upload(path, file);
         if (upErr) {
-          if (upErr.message?.includes("Bucket not found") || upErr.message?.includes("bucket")) {
+          if (upErr.message?.includes("Bucket not found") || upErr.message?.toLowerCase().includes("bucket")) {
             throw new Error(
-              'Bucket "product-images" introuvable. Créez-le dans Supabase Dashboard → Storage → New bucket → nom: "product-images" → Public. Puis réessayez.'
+              'Bucket "product-images" introuvable. Créez-le dans Supabase Dashboard → Storage → New bucket → nom: "product-images" → Public.'
+            );
+          }
+          if (
+            upErr.message?.includes("row-level security") ||
+            upErr.message?.includes("security policy") ||
+            (upErr as { statusCode?: string }).statusCode === "403"
+          ) {
+            throw new Error(
+              'Permission refusée (storage RLS). Exécutez le fichier supabase/migrations/0006_storage_policies.sql dans Supabase Dashboard → SQL Editor.'
             );
           }
           throw upErr;
@@ -163,12 +172,13 @@ export function AdminProductForm() {
           .from("product-images")
           .getPublicUrl(path);
 
-        await supabase.from("product_images").insert({
+        const { error: imgErr } = await supabase.from("product_images").insert({
           product_id: productId!,
           url: urlData.publicUrl,
           alt: vals.name_fr,
           sort_order: existingImages.length,
         });
+        if (imgErr) throw imgErr;
       }
 
       setUploading(false);

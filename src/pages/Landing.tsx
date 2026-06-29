@@ -1,4 +1,4 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   motion,
@@ -400,10 +400,22 @@ export function Landing() {
   const { t, lang } = useLang();
   const { data: featuredProducts } = useProducts({ featured: true, limit: 8 });
   const heroRef = useRef<HTMLDivElement>(null);
+
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth < 768
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const bgY = useTransform(scrollYProgress, [0, 1], [0, 120]);
-  const textY = useTransform(scrollYProgress, [0, 1], [0, 60]);
-  const carY = useTransform(scrollYProgress, [0, 1], [0, -40]);
+  // Parallax disabled on mobile — main-thread scroll listeners cause jank
+  const bgY = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 0] : [0, 120]);
+  const textY = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 0] : [0, 60]);
+  const carY = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 0] : [0, -40]);
 
   // Deterministic particles
   const particles = useMemo(() =>
@@ -536,7 +548,10 @@ export function Landing() {
         className="relative min-h-screen flex items-center overflow-hidden pt-20"
       >
         {/* ─ Background effects ─ */}
-        <motion.div style={{ y: bgY, willChange: "transform" }} className="absolute inset-0 pointer-events-none">
+        <motion.div
+          style={{ y: bgY, willChange: isMobile ? "auto" : "transform" }}
+          className="absolute inset-0 pointer-events-none"
+        >
           {/* Perspective grid */}
           <div
             className="absolute inset-0 opacity-[0.07]"
@@ -548,14 +563,14 @@ export function Landing() {
               transformOrigin: "center 80%",
             }}
           />
-          {/* Ambient glow orbs */}
-          <div className="absolute top-[-10%] right-[5%] w-[700px] h-[700px] rounded-full bg-brand/10 blur-[150px]" />
-          <div className="absolute bottom-[-20%] left-[10%] w-[500px] h-[500px] rounded-full bg-brand/8 blur-[120px]" />
-          <div className="absolute top-[30%] left-[30%] w-[300px] h-[300px] rounded-full bg-brand/5 blur-[80px]" />
+          {/* Ambient glow orbs — hidden on mobile (very expensive GPU composite layers) */}
+          <div className="hidden md:block absolute top-[-10%] right-[5%] w-[700px] h-[700px] rounded-full bg-brand/10 blur-[150px]" />
+          <div className="hidden md:block absolute bottom-[-20%] left-[10%] w-[500px] h-[500px] rounded-full bg-brand/8 blur-[120px]" />
+          <div className="hidden md:block absolute top-[30%] left-[30%] w-[300px] h-[300px] rounded-full bg-brand/5 blur-[80px]" />
         </motion.div>
 
-        {/* ─ Animated particles (CSS-only for mobile perf) ─ */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* ─ Animated particles — desktop only ─ */}
+        <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden">
           {particles.map((p) => (
             <div
               key={p.id}
@@ -590,7 +605,7 @@ export function Landing() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 items-center pt-4 pb-12 lg:py-16">
 
           {/* LEFT — text */}
-          <motion.div style={{ y: textY, willChange: "transform" }} className="flex flex-col gap-6">
+          <motion.div style={{ y: textY, willChange: isMobile ? "auto" : "transform" }} className="flex flex-col gap-6">
             {/* Eyebrow */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -710,19 +725,19 @@ export function Landing() {
 
           {/* RIGHT — car visual */}
           <motion.div
-            style={{ y: carY, willChange: "transform" }}
+            style={{ y: carY, willChange: isMobile ? "auto" : "transform" }}
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
             className="relative"
           >
-            {/* Glow under car */}
-            <div className="absolute bottom-[15%] left-1/2 -translate-x-1/2 w-[70%] h-24 bg-brand/20 blur-[60px] rounded-full" />
+            {/* Glow under car — hidden on mobile */}
+            <div className="hidden md:block absolute bottom-[15%] left-1/2 -translate-x-1/2 w-[70%] h-24 bg-brand/20 blur-[60px] rounded-full" />
 
-            {/* Car SVG */}
+            {/* Car SVG — float animation desktop only */}
             <motion.div
-              animate={{ y: [0, -12, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              animate={isMobile ? {} : { y: [0, -12, 0] }}
+              transition={isMobile ? {} : { duration: 5, repeat: Infinity, ease: "easeInOut" }}
               className="relative w-full"
             >
               <CarSVG />
