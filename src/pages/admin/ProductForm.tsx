@@ -46,6 +46,7 @@ export function AdminProductForm() {
   const [detailsFr, setDetailsFr] = useState<string[]>([""]);
   const [detailsAr, setDetailsAr] = useState<string[]>([""]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<{ id: string; url: string }[]>([]);
   const [uploading, setUploading] = useState(false);
 
@@ -373,22 +374,34 @@ export function AdminProductForm() {
             </span>
             <input
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp,image/gif"
               multiple
               className="sr-only"
               onChange={(e) => {
                 const files = Array.from(e.target.files ?? []);
+                if (!files.length) return;
+                const urls = files.map((f) => URL.createObjectURL(f));
                 setImageFiles((p) => [...p, ...files]);
+                setImagePreviews((p) => [...p, ...urls]);
+                e.target.value = "";
               }}
             />
           </label>
           {imageFiles.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {imageFiles.map((f, i) => (
-                <div key={i} className="flex items-center gap-1 bg-panel-2 border border-line px-2 py-1 rounded-md">
-                  <span className="text-[10px] font-mono text-muted">{f.name}</span>
-                  <button type="button" onClick={() => setImageFiles((p) => p.filter((_, j) => j !== i))} className="text-muted hover:text-brand">
-                    <X size={10} />
+                <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden group">
+                  <img src={imagePreviews[i]} alt={f.name} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      URL.revokeObjectURL(imagePreviews[i]);
+                      setImageFiles((p) => p.filter((_, j) => j !== i));
+                      setImagePreviews((p) => p.filter((_, j) => j !== i));
+                    }}
+                    className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={16} className="text-white" />
                   </button>
                 </div>
               ))}
