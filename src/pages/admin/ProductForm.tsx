@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Plus, X, Upload, ArrowLeft, Video } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { uploadVideoToCloudinary } from "@/lib/cloudinary";
 import { useCategories } from "@/hooks/useCategories";
 import { useLang } from "@/i18n/LanguageProvider";
 import { BentoPanel } from "@/components/ui/BentoPanel";
@@ -52,6 +53,7 @@ export function AdminProductForm() {
   const [newVideoFile, setNewVideoFile] = useState<File | null>(null);
   const [newVideoPreview, setNewVideoPreview] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [videoUploadPct, setVideoUploadPct] = useState(0);
 
   const {
     register,
@@ -161,19 +163,11 @@ export function AdminProductForm() {
         if (imgErr) throw imgErr;
       }
 
-      // Upload new video
+      // Upload new video to Cloudinary
       if (newVideoFile) {
-        const ext = newVideoFile.name.split(".").pop();
-        const path = `${productId}/video_${Date.now()}.${ext}`;
-        const { error: vidErr } = await supabase.storage.from("product-images").upload(path, newVideoFile);
-        if (vidErr) {
-          if (vidErr.message?.includes("row-level security") || vidErr.message?.includes("security policy") || (vidErr as { statusCode?: string }).statusCode === "403") {
-            throw new Error('Permission refusée pour la vidéo (storage RLS). Exécutez supabase/migrations/0006_storage_policies.sql.');
-          }
-          throw vidErr;
-        }
-        const { data: vidUrlData } = supabase.storage.from("product-images").getPublicUrl(path);
-        const { error: vidUpdateErr } = await supabase.from("products").update({ video_url: vidUrlData.publicUrl }).eq("id", productId!);
+        setVideoUploadPct(0);
+        const cloudinaryUrl = await uploadVideoToCloudinary(newVideoFile, (pct) => setVideoUploadPct(pct));
+        const { error: vidUpdateErr } = await supabase.from("products").update({ video_url: cloudinaryUrl }).eq("id", productId!);
         if (vidUpdateErr) throw vidUpdateErr;
       }
 
@@ -385,7 +379,7 @@ export function AdminProductForm() {
               <span className="text-[10px] font-mono text-muted uppercase tracking-wider">
                 {existingVideoUrl ? "Remplacer la vidéo" : "Ajouter une vidéo"}
               </span>
-              <span className="text-[9px] font-mono text-muted/50">MP4, WebM, MOV</span>
+              <span className="text-[9px] font-mono text-muted/50">MP4, WebM, MOV · Hébergé sur Cloudinary</span>
               <input
                 type="file"
                 accept="video/mp4,video/webm,video/quicktime,video/*"
@@ -399,6 +393,22 @@ export function AdminProductForm() {
                 }}
               />
             </label>
+          )}
+
+          {/* Upload progress bar */}
+          {uploading && newVideoFile && videoUploadPct > 0 && videoUploadPct < 100 && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Upload Cloudinary…</span>
+                <span className="text-[9px] font-mono text-brand">{videoUploadPct}%</span>
+              </div>
+              <div className="w-full h-1 bg-line rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-brand transition-all duration-200 rounded-full"
+                  style={{ width: `${videoUploadPct}%` }}
+                />
+              </div>
+            </div>
           )}
         </BentoPanel>
 
