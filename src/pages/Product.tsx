@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Minus, Plus } from "lucide-react";
 import { useProduct, useProducts } from "@/hooks/useProducts";
 import { useLang } from "@/i18n/LanguageProvider";
 import { useCartStore } from "@/store/cart";
@@ -23,6 +23,7 @@ export function Product() {
   const [selectedColorLabel, setSelectedColorLabel] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [activeImg, setActiveImg] = useState(0);
+  const [qty, setQty] = useState(1);
 
   const displayProduct = product;
 
@@ -35,7 +36,6 @@ export function Product() {
     return (relatedFromDB ?? []).filter((p) => p.id !== (displayProduct?.id ?? "")).slice(0, 4);
   }, [relatedFromDB, displayProduct]);
 
-  /* ── Loading ── */
   if (isLoading) {
     return (
       <div className="min-h-screen pt-20 pb-16 px-4 max-w-7xl mx-auto">
@@ -51,7 +51,6 @@ export function Product() {
     );
   }
 
-  /* ── Not found ── */
   if (!displayProduct) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -65,7 +64,6 @@ export function Product() {
     );
   }
 
-  /* ── Derived values ── */
   const name        = lang === "ar" ? displayProduct.name_ar        : displayProduct.name_fr;
   const description = lang === "ar" ? displayProduct.description_ar : displayProduct.description_fr;
   const details     = lang === "ar" ? displayProduct.details_ar     : displayProduct.details_fr;
@@ -89,11 +87,25 @@ export function Product() {
       image: primaryImg,
       color: selectedColorLabel,
       size: selectedSize,
-    });
+    }, qty);
+    setQty(1);
     openCart();
   };
 
-  /* ── Page ── */
+  const VideoBlock = ({ className }: { className?: string }) =>
+    displayProduct.video_url ? (
+      <div className={cn("rounded-bento-lg overflow-hidden bg-black border border-line/30", className)}>
+        <video
+          src={displayProduct.video_url}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full"
+        />
+      </div>
+    ) : null;
+
   return (
     <div className="min-h-screen pt-20 pb-16 flex flex-col">
 
@@ -112,84 +124,79 @@ export function Product() {
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-4 items-start">
 
-          {/* ══ LEFT — image panel ══ */}
-          <motion.div
-            initial={{ opacity: 0, x: -24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative flex flex-col rounded-bento-lg bg-panel border border-line/30 overflow-hidden min-h-[60vh] lg:min-h-[80vh]"
-          >
-            {/* Main image area */}
-            <div
-              className="flex-1 relative flex items-center justify-center p-8 lg:p-12"
-              style={{ background: "radial-gradient(ellipse at 60% 40%, rgb(var(--c-panel-2)) 0%, rgb(var(--c-bg)) 70%)" }}
+          {/* ══ LEFT — image + video (desktop) ══ */}
+          <div className="flex flex-col gap-4">
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative flex flex-col rounded-bento-lg bg-panel border border-line/30 overflow-hidden min-h-[60vh] lg:min-h-[80vh]"
             >
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={primaryImg}
-                  src={primaryImg}
-                  alt={name}
-                  className="max-h-[50vh] lg:max-h-[55vh] w-full object-contain drop-shadow-2xl"
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.25 }}
-                />
-              </AnimatePresence>
+              {/* Main image area */}
+              <div
+                className="flex-1 relative flex items-center justify-center p-8 lg:p-12"
+                style={{ background: "radial-gradient(ellipse at 60% 40%, rgb(var(--c-panel-2)) 0%, rgb(var(--c-bg)) 70%)" }}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={primaryImg}
+                    src={primaryImg}
+                    alt={name}
+                    className="max-h-[50vh] lg:max-h-[55vh] w-full object-contain drop-shadow-2xl"
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    transition={{ duration: 0.25 }}
+                  />
+                </AnimatePresence>
 
-              {/* PROMO badge floating */}
-              {isOnSale && (
-                <span className="absolute top-4 left-4 bg-brand text-ink text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-md">
-                  {t("product_final_sale")}
-                </span>
-              )}
-
-              {/* Style code — vertical on right edge */}
-              {displayProduct.style_code && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden lg:flex">
-                  <span
-                    className="text-[9px] font-mono text-muted/40 uppercase tracking-[0.3em] whitespace-nowrap select-none"
-                    style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-                  >
-                    {t("product_style")}: {displayProduct.style_code}
+                {isOnSale && (
+                  <span className="absolute top-4 left-4 bg-brand text-ink text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-md">
+                    {t("product_final_sale")}
                   </span>
+                )}
+
+                {displayProduct.style_code && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden lg:flex">
+                    <span
+                      className="text-[9px] font-mono text-muted/40 uppercase tracking-[0.3em] whitespace-nowrap select-none"
+                      style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+                    >
+                      {t("product_style")}: {displayProduct.style_code}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {images.length > 1 && (
+                <div className="flex gap-2 p-4 border-t border-line/30 overflow-x-auto scrollbar-none">
+                  {images.map((img, i) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setActiveImg(i)}
+                      className={cn(
+                        "flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all",
+                        i === activeImg ? "border-brand" : "border-line/40 hover:border-muted/60"
+                      )}
+                    >
+                      <img src={img.url} alt={img.alt ?? name} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
                 </div>
               )}
-            </div>
 
-            {/* Thumbnail strip (only if multiple images) */}
-            {images.length > 1 && (
-              <div className="flex gap-2 p-4 border-t border-line/30 overflow-x-auto scrollbar-none">
-                {images.map((img, i) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setActiveImg(i)}
-                    className={cn(
-                      "flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all",
-                      i === activeImg ? "border-brand" : "border-line/40 hover:border-muted/60"
-                    )}
-                  >
-                    <img src={img.url} alt={img.alt ?? name} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+              {description && (
+                <div className={cn("px-6 py-4 border-t border-line/30", images.length <= 1 && "mt-auto")}>
+                  <p className={cn("text-[10px] font-mono text-muted/60 leading-relaxed", lang === "ar" && "font-ar text-right text-xs")}>
+                    {description}
+                  </p>
+                </div>
+              )}
+            </motion.div>
 
-            {/* Description caption */}
-            {description && (
-              <div className={cn(
-                "px-6 py-4 border-t border-line/30",
-                images.length <= 1 && "mt-auto"
-              )}>
-                <p className={cn(
-                  "text-[10px] font-mono text-muted/60 leading-relaxed",
-                  lang === "ar" && "font-ar text-right text-xs"
-                )}>
-                  {description}
-                </p>
-              </div>
-            )}
-          </motion.div>
+            {/* Video — desktop only, below image */}
+            <VideoBlock className="hidden lg:block" />
+          </div>
 
           {/* ══ RIGHT — info column ══ */}
           <motion.div
@@ -214,7 +221,6 @@ export function Product() {
             {/* ── Price + colour + size panel ── */}
             <div className="rounded-bento-lg bg-panel border border-line/30 p-6">
 
-              {/* Price row */}
               <div className={cn("flex items-baseline gap-3 flex-wrap", lang === "ar" && "flex-row-reverse")}>
                 <span className="text-3xl font-mono font-bold text-ink">
                   {formatPrice(displayProduct.price)}
@@ -233,27 +239,18 @@ export function Product() {
 
               <div className="border-t border-line/50 my-5" />
 
-              {/* Colour */}
               {colors.length > 0 && (
                 <div className="mb-5">
-                  <p className={cn(
-                    "text-[10px] font-mono uppercase tracking-widest text-muted mb-3",
-                    lang === "ar" && "text-right"
-                  )}>
+                  <p className={cn("text-[10px] font-mono uppercase tracking-widest text-muted mb-3", lang === "ar" && "text-right")}>
                     {t("product_colour")}
-                    {selectedColorLabel && (
-                      <span className="text-ink font-bold ms-1">: {selectedColorLabel}</span>
-                    )}
+                    {selectedColorLabel && <span className="text-ink font-bold ms-1">: {selectedColorLabel}</span>}
                   </p>
                   <div className={cn("flex flex-wrap gap-2.5", lang === "ar" && "flex-row-reverse")}>
                     {colors.map((c, idx) => (
                       <button
                         key={idx}
                         title={lang === "ar" ? c.label_ar : c.label_fr}
-                        onClick={() => {
-                          setSelectedColorIdx(idx);
-                          setSelectedColorLabel(lang === "ar" ? c.label_ar : c.label_fr);
-                        }}
+                        onClick={() => { setSelectedColorIdx(idx); setSelectedColorLabel(lang === "ar" ? c.label_ar : c.label_fr); }}
                         className={cn(
                           "w-8 h-8 rounded-full border-2 transition-all duration-150 relative flex items-center justify-center",
                           selectedColorIdx === idx
@@ -263,11 +260,7 @@ export function Product() {
                         style={{ backgroundColor: c.hex }}
                       >
                         {selectedColorIdx === idx && (
-                          <Check
-                            size={13}
-                            className="text-ink drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
-                            strokeWidth={3}
-                          />
+                          <Check size={13} className="text-ink drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" strokeWidth={3} />
                         )}
                       </button>
                     ))}
@@ -276,17 +269,11 @@ export function Product() {
                 </div>
               )}
 
-              {/* Size */}
               {sizes.length > 0 && (
                 <div className="mb-5">
-                  <p className={cn(
-                    "text-[10px] font-mono uppercase tracking-widest text-muted mb-3",
-                    lang === "ar" && "text-right"
-                  )}>
+                  <p className={cn("text-[10px] font-mono uppercase tracking-widest text-muted mb-3", lang === "ar" && "text-right")}>
                     {t("product_size")}
-                    {selectedSize && (
-                      <span className="text-ink font-bold ms-1">: {selectedSize}</span>
-                    )}
+                    {selectedSize && <span className="text-ink font-bold ms-1">: {selectedSize}</span>}
                   </p>
                   <div className={cn("flex flex-wrap gap-2", lang === "ar" && "flex-row-reverse")}>
                     {sizes.map((s) => (
@@ -308,17 +295,10 @@ export function Product() {
                 </div>
               )}
 
-              {/* Stock */}
-              <p className={cn(
-                "text-[10px] font-mono uppercase tracking-widest",
-                displayProduct.stock > 0 ? "text-muted/70" : "text-brand"
-              )}>
-                {displayProduct.stock > 0
-                  ? tf("product_in_stock", displayProduct.stock)
-                  : t("product_out_of_stock")}
+              <p className={cn("text-[10px] font-mono uppercase tracking-widest", displayProduct.stock > 0 ? "text-muted/70" : "text-brand")}>
+                {displayProduct.stock > 0 ? tf("product_in_stock", displayProduct.stock) : t("product_out_of_stock")}
               </p>
 
-              {/* Selection hint */}
               {!canAdd && displayProduct.stock > 0 && (needsColor || needsSize) && (
                 <p className="text-[10px] font-mono text-brand/70 mt-2">
                   {needsColor && selectedColorIdx === null && t("product_select_colour")}
@@ -326,16 +306,59 @@ export function Product() {
                   {needsSize && !selectedSize && t("product_select_size")}
                 </p>
               )}
+
+              {/* ── Quantity selector ── */}
+              {displayProduct.stock > 0 && (
+                <div className={cn("flex items-center gap-4 mt-5 pt-5 border-t border-line/50", lang === "ar" && "flex-row-reverse")}>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-muted">
+                    {lang === "ar" ? "الكمية" : "Quantité"}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setQty((q) => Math.max(1, q - 1))}
+                      disabled={qty <= 1}
+                      className="w-8 h-8 rounded-lg border border-line flex items-center justify-center text-ink hover:border-brand hover:text-brand disabled:opacity-30 transition-colors"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-8 text-center font-mono text-sm font-bold text-ink tabular-nums">
+                      {qty}
+                    </span>
+                    <button
+                      onClick={() => setQty((q) => Math.min(displayProduct.stock, q + 1))}
+                      disabled={qty >= displayProduct.stock}
+                      className="w-8 h-8 rounded-lg border border-line flex items-center justify-center text-ink hover:border-brand hover:text-brand disabled:opacity-30 transition-colors"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* ── Details + Add to cart row ── */}
+            {/* ── Details + Add to cart ──
+                Mobile:  [button first] then [details]
+                Desktop: [details left] [button right]  via CSS order
+            ── */}
             <div className={cn(
               "flex flex-col sm:flex-row gap-3 items-start",
               (!details || details.length === 0) && "sm:justify-end"
             )}>
-              {/* Details panel */}
+
+              {/* Button — first in DOM (=first on mobile), pushed last on sm+ */}
+              <div className="sm:order-last flex items-center justify-center w-full sm:w-auto sm:flex-shrink-0 py-2">
+                <CircleButton
+                  label={t("product_add_to_cart")}
+                  size={140}
+                  disabled={!canAdd}
+                  onClick={handleAddToCart}
+                  aria-label={t("product_add_to_cart")}
+                />
+              </div>
+
+              {/* Details — second in DOM (=second on mobile), pushed first on sm+ */}
               {details && details.length > 0 && (
-                <div className="w-full sm:flex-1 rounded-bento bg-panel border border-line/30 p-5 min-w-0">
+                <div className="sm:order-first w-full sm:flex-1 rounded-bento bg-panel border border-line/30 p-5 min-w-0">
                   <h3 className="text-[10px] uppercase tracking-widest font-mono text-muted mb-4">
                     {t("product_details")}
                   </h3>
@@ -355,18 +378,10 @@ export function Product() {
                   </ul>
                 </div>
               )}
-
-              {/* Circle add-to-cart */}
-              <div className="flex items-center justify-center w-full sm:w-auto sm:flex-shrink-0 py-2">
-                <CircleButton
-                  label={t("product_add_to_cart")}
-                  size={140}
-                  disabled={!canAdd}
-                  onClick={handleAddToCart}
-                  aria-label={t("product_add_to_cart")}
-                />
-              </div>
             </div>
+
+            {/* Video — mobile only, below details */}
+            <VideoBlock className="lg:hidden" />
           </motion.div>
         </div>
 

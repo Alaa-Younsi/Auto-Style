@@ -38,6 +38,7 @@ export interface Product {
   sizes: ProductSize[];
   featured: boolean;
   status: "active" | "draft";
+  video_url: string | null;
   created_at: string;
   updated_at: string;
 }

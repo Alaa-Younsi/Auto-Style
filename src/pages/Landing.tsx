@@ -398,7 +398,7 @@ function SectionHeader({ tag, title, subtitle }: { tag: string; title: string; s
 /* ─── MAIN PAGE ───────────────────────────────────────────────────────────── */
 export function Landing() {
   const { t, lang } = useLang();
-  const { data: featuredProducts } = useProducts({ featured: true, limit: 8 });
+  const { data: featuredProducts } = useProducts({ featured: true, limit: 4 });
   const heroRef = useRef<HTMLDivElement>(null);
 
   const [isMobile, setIsMobile] = useState(() =>
