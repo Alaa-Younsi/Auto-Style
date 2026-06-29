@@ -52,7 +52,8 @@ export function AdminProducts() {
             <p className="text-muted font-mono text-xs">{t("admin_no_products")}</p>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px]">
             <thead>
               <tr className="border-b border-line/50">
                 {["", "Nom FR", "Prix", "Stock", t("admin_status"), ""].map((h) => (
@@ -130,6 +131,7 @@ export function AdminProducts() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </BentoPanel>
     </div>

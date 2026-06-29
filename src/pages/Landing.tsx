@@ -536,7 +536,7 @@ export function Landing() {
         className="relative min-h-screen flex items-center overflow-hidden pt-20"
       >
         {/* ─ Background effects ─ */}
-        <motion.div style={{ y: bgY }} className="absolute inset-0 pointer-events-none">
+        <motion.div style={{ y: bgY, willChange: "transform" }} className="absolute inset-0 pointer-events-none">
           {/* Perspective grid */}
           <div
             className="absolute inset-0 opacity-[0.07]"
@@ -554,15 +554,21 @@ export function Landing() {
           <div className="absolute top-[30%] left-[30%] w-[300px] h-[300px] rounded-full bg-brand/5 blur-[80px]" />
         </motion.div>
 
-        {/* ─ Animated particles ─ */}
+        {/* ─ Animated particles (CSS-only for mobile perf) ─ */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {particles.map((p) => (
-            <motion.div
+            <div
               key={p.id}
-              className="absolute rounded-full bg-brand"
-              style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size }}
-              animate={{ y: [0, -24, 0], opacity: [0.7, 0, 0.7] }}
-              transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute rounded-full bg-brand particle"
+              style={{
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                width: p.size,
+                height: p.size,
+                animationDuration: `${p.duration}s`,
+                animationDelay: `${p.delay}s`,
+                animationTimingFunction: "ease-in-out",
+              }}
             />
           ))}
         </div>
@@ -584,7 +590,7 @@ export function Landing() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 items-center pt-4 pb-12 lg:py-16">
 
           {/* LEFT — text */}
-          <motion.div style={{ y: textY }} className="flex flex-col gap-6">
+          <motion.div style={{ y: textY, willChange: "transform" }} className="flex flex-col gap-6">
             {/* Eyebrow */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -704,7 +710,7 @@ export function Landing() {
 
           {/* RIGHT — car visual */}
           <motion.div
-            style={{ y: carY }}
+            style={{ y: carY, willChange: "transform" }}
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}

@@ -150,7 +150,14 @@ export function AdminProductForm() {
         const { error: upErr } = await supabase.storage
           .from("product-images")
           .upload(path, file);
-        if (upErr) throw upErr;
+        if (upErr) {
+          if (upErr.message?.includes("Bucket not found") || upErr.message?.includes("bucket")) {
+            throw new Error(
+              'Bucket "product-images" introuvable. Créez-le dans Supabase Dashboard → Storage → New bucket → nom: "product-images" → Public. Puis réessayez.'
+            );
+          }
+          throw upErr;
+        }
 
         const { data: urlData } = supabase.storage
           .from("product-images")

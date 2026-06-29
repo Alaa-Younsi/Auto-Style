@@ -27,19 +27,39 @@ export function CircleButton({ label, size = 140, className, disabled, onClick, 
   const glowId = `glow-${size}`;
 
   const floatLabel = lang === "ar" ? "أضف إلى السلة" : "Ajouter au panier";
-  const floatFont = lang === "ar" ? "font-ar text-sm" : "font-mono text-[11px] uppercase tracking-widest";
+  const floatFont = lang === "ar" ? "font-ar text-sm" : "font-mono text-[10px] uppercase tracking-widest";
 
   return (
     <div className={cn(
       "relative flex items-center",
-      lang === "ar" ? "flex-row-reverse gap-4" : "gap-4"
+      lang === "ar" ? "flex-row-reverse gap-5" : "gap-5"
     )}>
-      {/* Floating label — one language only */}
-      <div className="flex flex-col gap-1 pointer-events-none select-none">
-        <span className={cn("text-ink/85 leading-none whitespace-nowrap font-semibold", floatFont)}>
-          {floatLabel}
-        </span>
-        <div className={cn("h-px w-8 bg-brand/60", lang === "ar" && "ms-auto")} />
+      {/* Floating label badge */}
+      <div className={cn(
+        "flex flex-col gap-2 pointer-events-none select-none",
+        lang === "ar" && "items-end"
+      )}>
+        <div className={cn(
+          "flex items-center gap-2 bg-brand text-white rounded-xl px-4 py-2.5",
+          "shadow-[0_4px_20px_-4px_rgba(225,29,42,0.6)]",
+          "ring-1 ring-brand/40",
+          lang === "ar" && "flex-row-reverse"
+        )}>
+          {/* Cart icon */}
+          <svg viewBox="0 0 20 20" className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 1h3l1.5 8.5h9L17 5H5.5" />
+            <circle cx="8" cy="17" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="17" r="1.2" fill="currentColor" stroke="none" />
+          </svg>
+          <span className={cn("text-white font-bold leading-none whitespace-nowrap", floatFont)}>
+            {floatLabel}
+          </span>
+        </div>
+        {/* Arrow line pointing at wheel */}
+        <div className={cn(
+          "h-px bg-gradient-to-r from-brand to-transparent w-12",
+          lang === "ar" && "bg-gradient-to-l ms-auto"
+        )} />
       </div>
 
       {/* Steering wheel */}
@@ -159,9 +179,18 @@ export function CircleButton({ label, size = 140, className, disabled, onClick, 
             cx={cx} cy={cx} r={hubR * 0.42}
             fill="rgb(var(--c-panel))"
           />
-          <circle
-            cx={cx} cy={cx} r={hubR * 0.18}
-            fill="#E11D2A"
+          {/* "+" icon in hub center */}
+          <line
+            x1={cx - hubR * 0.22} y1={cx}
+            x2={cx + hubR * 0.22} y2={cx}
+            stroke="white" strokeWidth={hubR * 0.14} strokeLinecap="round"
+            opacity="0.9"
+          />
+          <line
+            x1={cx} y1={cx - hubR * 0.22}
+            x2={cx} y2={cx + hubR * 0.22}
+            stroke="white" strokeWidth={hubR * 0.14} strokeLinecap="round"
+            opacity="0.9"
           />
 
           {/* Rotating ring text — animateTransform rotates around the wheel center */}
