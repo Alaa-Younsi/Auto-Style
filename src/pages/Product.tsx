@@ -19,7 +19,7 @@ export function Product() {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
 
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
   const [selectedColorLabel, setSelectedColorLabel] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [activeImg, setActiveImg] = useState(0);
@@ -76,7 +76,7 @@ export function Product() {
   const sizes: ProductSize[]   = displayProduct.sizes ?? [];
   const needsColor  = colors.length > 0;
   const needsSize   = sizes.length > 0;
-  const canAdd      = displayProduct.stock > 0 && (!needsColor || !!selectedColor) && (!needsSize || !!selectedSize);
+  const canAdd      = displayProduct.stock > 0 && (!needsColor || selectedColorIdx !== null) && (!needsSize || !!selectedSize);
 
   const handleAddToCart = () => {
     if (!canAdd) return;
@@ -95,7 +95,7 @@ export function Product() {
 
   /* ── Page ── */
   return (
-    <div className="min-h-screen pt-16 pb-16 flex flex-col">
+    <div className="min-h-screen pt-20 pb-16 flex flex-col">
 
       {/* Back link */}
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-4">
@@ -246,23 +246,23 @@ export function Product() {
                     )}
                   </p>
                   <div className={cn("flex flex-wrap gap-2.5", lang === "ar" && "flex-row-reverse")}>
-                    {colors.map((c) => (
+                    {colors.map((c, idx) => (
                       <button
-                        key={c.hex}
+                        key={idx}
                         title={lang === "ar" ? c.label_ar : c.label_fr}
                         onClick={() => {
-                          setSelectedColor(c.hex);
+                          setSelectedColorIdx(idx);
                           setSelectedColorLabel(lang === "ar" ? c.label_ar : c.label_fr);
                         }}
                         className={cn(
                           "w-8 h-8 rounded-full border-2 transition-all duration-150 relative flex items-center justify-center",
-                          selectedColor === c.hex
+                          selectedColorIdx === idx
                             ? "border-brand scale-110 shadow-[0_0_0_2px_rgba(225,29,42,0.3)]"
                             : "border-line hover:border-muted hover:scale-105"
                         )}
                         style={{ backgroundColor: c.hex }}
                       >
-                        {selectedColor === c.hex && (
+                        {selectedColorIdx === idx && (
                           <Check
                             size={13}
                             className="text-ink drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
@@ -321,8 +321,8 @@ export function Product() {
               {/* Selection hint */}
               {!canAdd && displayProduct.stock > 0 && (needsColor || needsSize) && (
                 <p className="text-[10px] font-mono text-brand/70 mt-2">
-                  {needsColor && !selectedColor && t("product_select_colour")}
-                  {needsColor && !selectedColor && needsSize && !selectedSize && " · "}
+                  {needsColor && selectedColorIdx === null && t("product_select_colour")}
+                  {needsColor && selectedColorIdx === null && needsSize && !selectedSize && " · "}
                   {needsSize && !selectedSize && t("product_select_size")}
                 </p>
               )}
@@ -330,12 +330,12 @@ export function Product() {
 
             {/* ── Details + Add to cart row ── */}
             <div className={cn(
-              "flex gap-3 items-stretch",
-              (!details || details.length === 0) && "justify-end"
+              "flex flex-col sm:flex-row gap-3 items-start",
+              (!details || details.length === 0) && "sm:justify-end"
             )}>
               {/* Details panel */}
               {details && details.length > 0 && (
-                <div className="flex-1 rounded-bento bg-panel border border-line/30 p-5 min-w-0">
+                <div className="w-full sm:flex-1 rounded-bento bg-panel border border-line/30 p-5 min-w-0">
                   <h3 className="text-[10px] uppercase tracking-widest font-mono text-muted mb-4">
                     {t("product_details")}
                   </h3>
@@ -357,10 +357,10 @@ export function Product() {
               )}
 
               {/* Circle add-to-cart */}
-              <div className="flex items-center justify-center flex-shrink-0 py-2">
+              <div className="flex items-center justify-center w-full sm:w-auto sm:flex-shrink-0 py-2">
                 <CircleButton
                   label={t("product_add_to_cart")}
-                  size={152}
+                  size={140}
                   disabled={!canAdd}
                   onClick={handleAddToCart}
                   aria-label={t("product_add_to_cart")}

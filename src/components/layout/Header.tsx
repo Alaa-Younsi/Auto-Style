@@ -26,14 +26,14 @@ export function Header() {
   const adminLink = { to: "/admin", label: t("nav_admin") };
 
   return (
-    <header className="fixed top-0 inset-x-0 z-30 bg-bg/80 backdrop-blur-md border-b border-line/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
+    <header className="fixed top-0 inset-x-0 z-50 bg-bg/96 backdrop-blur-md border-b border-line/50 shadow-[0_1px_0_0_rgba(0,0,0,0.06)]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center gap-6">
         {/* Logo */}
         <Link to="/" className="flex-shrink-0 flex items-center gap-2.5">
           <img
             src={logo}
             alt="Auto Style"
-            className="h-14 w-auto"
+            className="h-16 w-auto"
           />
         </Link>
 
