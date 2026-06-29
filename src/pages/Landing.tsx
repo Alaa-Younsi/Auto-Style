@@ -9,6 +9,7 @@ import {
 import { ArrowRight, Star, ChevronRight } from "lucide-react";
 import { useLang } from "@/i18n/LanguageProvider";
 import { useProducts } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
 import { Button } from "@/components/ui/Button";
 import { BentoPanel } from "@/components/ui/BentoPanel";
 import { Marquee } from "@/components/ui/Marquee";
@@ -399,6 +400,7 @@ function SectionHeader({ tag, title, subtitle }: { tag: string; title: string; s
 export function Landing() {
   const { t, lang } = useLang();
   const { data: featuredProducts } = useProducts({ featured: true, limit: 4 });
+  const { data: categoriesData } = useCategories();
   const heroRef = useRef<HTMLDivElement>(null);
 
   const [isMobile, setIsMobile] = useState(() =>
@@ -531,13 +533,6 @@ export function Landing() {
     },
   ];
 
-  const categories = [
-    { name_fr: "Intérieur", name_ar: "داخلي", img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&q=80", span: "col-span-2 row-span-2" },
-    { name_fr: "Électronique", name_ar: "إلكترونيات", img: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&q=80", span: "" },
-    { name_fr: "Audio", name_ar: "صوتيات", img: "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=400&q=80", span: "" },
-    { name_fr: "Éclairage", name_ar: "إضاءة", img: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&q=80", span: "" },
-    { name_fr: "Extérieur", name_ar: "خارجي", img: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=80", span: "" },
-  ];
 
   return (
     <div className="overflow-x-hidden">
@@ -873,32 +868,36 @@ export function Landing() {
           tag={lang === "ar" ? "تصفح حسب الفئة" : "Parcourir par catégorie"}
           title={lang === "ar" ? "الفئات" : "NOS\nCATÉGORIES"}
         />
-        <div className="grid grid-cols-2 sm:grid-cols-4 grid-rows-2 gap-3 h-[420px] sm:h-[500px]">
-          {categories.map(({ name_fr, name_ar, img, span }, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-4 sm:grid-rows-2 gap-3 sm:h-[500px]">
+          {(categoriesData ?? []).map((cat, i) => (
             <motion.div
-              key={name_fr}
-              className={cn("relative group overflow-hidden rounded-bento cursor-pointer", span || "col-span-1 row-span-1")}
+              key={cat.id}
+              className={cn(
+                "relative group overflow-hidden rounded-bento cursor-pointer h-36 sm:h-auto col-span-1 row-span-1",
+                i === 0 && "sm:col-span-2 sm:row-span-2"
+              )}
               initial={{ opacity: 0, scale: 0.94 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.5 }}
               whileHover={{ scale: 0.98 }}
             >
-              <Link to="/shop" className="block h-full">
+              <Link to={`/shop?category=${cat.slug}`} className="block h-full">
                 <div className="absolute inset-0 bg-panel" />
-                <img
-                  src={img}
-                  alt={name_fr}
-                  className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-all duration-500 group-hover:scale-110"
-                />
+                {cat.image_url && (
+                  <img
+                    src={cat.image_url}
+                    alt={cat.name_fr}
+                    className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-all duration-500 group-hover:scale-110"
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-bg/90 via-bg/30 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-4 flex items-end justify-between">
                   <p className={cn("font-mono text-sm uppercase tracking-wider text-ink group-hover:text-brand transition-colors font-bold", lang === "ar" && "font-ar text-base normal-case tracking-normal")}>
-                    {lang === "ar" ? name_ar : name_fr}
+                    {lang === "ar" ? cat.name_ar : cat.name_fr}
                   </p>
                   <ChevronRight size={14} className="text-muted group-hover:text-brand transition-colors opacity-0 group-hover:opacity-100" />
                 </div>
-                {/* Hover glow border */}
                 <div className="absolute inset-0 rounded-bento border border-brand/0 group-hover:border-brand/40 transition-colors duration-300" />
               </Link>
             </motion.div>
