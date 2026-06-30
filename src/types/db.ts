@@ -72,6 +72,7 @@ export interface Order {
   total: number;
   status: OrderStatus;
   language: string;
+  delivery_type: DeliveryType;
   created_at: string;
 }
 
@@ -96,4 +97,24 @@ export interface StoreSettings {
   id: number;
   shipping_fee: number;
   free_ship_threshold: number;
+}
+
+export type DeliveryType = "home" | "office";
+
+export interface DeliveryPrice {
+  id: string;
+  wilaya: string;
+  home_price: number;
+  office_price: number;
+  updated_at: string;
+}
+
+export interface ClientReview {
+  id: string;
+  client_name: string;
+  stars: number;
+  review_text: string;
+  image_url: string | null;
+  active: boolean;
+  created_at: string;
 }

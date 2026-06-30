@@ -8,6 +8,7 @@ import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/format";
 import { CircleButton } from "@/components/ui/CircleButton";
 import { ProductCard } from "@/components/product/ProductCard";
+import { InlineCheckout } from "@/components/product/InlineCheckout";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { ProductColor, ProductSize } from "@/types/db";
 import { cn } from "@/lib/utils";
@@ -187,7 +188,7 @@ export function Product() {
 
               {description && (
                 <div className={cn("px-6 py-4 border-t border-line/30", images.length <= 1 && "mt-auto")}>
-                  <p className={cn("text-[10px] font-mono text-muted/60 leading-relaxed", lang === "ar" && "font-ar text-right text-xs")}>
+                  <p className={cn("text-xs font-mono font-bold text-ink/70 leading-relaxed", lang === "ar" && "font-ar text-right text-sm")}>
                     {description}
                   </p>
                 </div>
@@ -367,7 +368,7 @@ export function Product() {
                       <li
                         key={i}
                         className={cn(
-                          "text-[11px] font-mono text-ink/75 leading-relaxed flex items-start gap-2",
+                          "text-xs font-mono text-ink/80 leading-relaxed flex items-start gap-2",
                           lang === "ar" && "font-ar text-sm flex-row-reverse"
                         )}
                       >
@@ -384,6 +385,23 @@ export function Product() {
             <VideoBlock className="lg:hidden" />
           </motion.div>
         </div>
+
+        {/* ── Inline Checkout ── */}
+        {displayProduct.stock > 0 && (
+          <div className="mt-12 pt-12 border-t border-line/30">
+            <InlineCheckout
+              productId={displayProduct.id}
+              name_fr={displayProduct.name_fr}
+              name_ar={displayProduct.name_ar}
+              price={displayProduct.price}
+              image={primaryImg}
+              qty={qty}
+              colorLabel={selectedColorLabel}
+              size={selectedSize}
+              canSubmit={canAdd}
+            />
+          </div>
+        )}
 
         {/* ── Related products ── */}
         {relatedProducts.length > 0 && (

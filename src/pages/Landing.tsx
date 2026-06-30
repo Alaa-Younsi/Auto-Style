@@ -7,6 +7,8 @@ import {
   useInView,
 } from "framer-motion";
 import { ArrowRight, Star, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import { useLang } from "@/i18n/LanguageProvider";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
@@ -17,6 +19,7 @@ import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { ProductCard } from "@/components/product/ProductCard";
 import logo from "@/assets/auto-style-logo.png";
 import { cn } from "@/lib/utils";
+import type { ClientReview } from "@/types/db";
 
 /* ─── SVG ICONS ─────────────────────────────────────────────────────────── */
 
@@ -403,6 +406,29 @@ export function Landing() {
   const { data: categoriesData } = useCategories();
   const heroRef = useRef<HTMLDivElement>(null);
 
+  const { data: activeProductCount = 0 } = useQuery({
+    queryKey: ["active-product-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("products")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+      return count ?? 0;
+    },
+  });
+
+  const { data: dbReviews } = useQuery({
+    queryKey: ["active-reviews"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("client_reviews")
+        .select("*")
+        .eq("active", true)
+        .order("created_at", { ascending: false });
+      return (data ?? []) as ClientReview[];
+    },
+  });
+
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" && window.innerWidth < 768
   );
@@ -431,8 +457,8 @@ export function Landing() {
     })), []);
 
   const stats = [
-    { value: 500, suffix: "+", label_fr: "Produits", label_ar: "منتج" },
-    { value: 58, suffix: "", label_fr: "Wilayas", label_ar: "ولاية" },
+    { value: activeProductCount, suffix: "+", label_fr: "Produits", label_ar: "منتج" },
+    { value: 69, suffix: "", label_fr: "Wilayas", label_ar: "ولاية" },
     { value: 24, suffix: "H", label_fr: "Livraison", label_ar: "توصيل" },
     { value: 100, suffix: "%", label_fr: "Satisfaits", label_ar: "رضا" },
   ];
@@ -443,8 +469,8 @@ export function Landing() {
       step: "01",
       title_fr: "Choisissez",
       title_ar: "اختر",
-      desc_fr: "Parcourez notre catalogue de +500 accessoires auto et trouvez celui qui convient à votre véhicule.",
-      desc_ar: "تصفح كتالوجنا من أكثر من 500 إكسسوار وجد ما يناسب سيارتك.",
+      desc_fr: `Parcourez notre catalogue de +${activeProductCount > 0 ? activeProductCount : "500"} accessoires auto et trouvez celui qui convient à votre véhicule.`,
+      desc_ar: `تصفح كتالوجنا من أكثر من ${activeProductCount > 0 ? activeProductCount : "500"} إكسسوار وجد ما يناسب سيارتك.`,
     },
     {
       icon: <IconCart />,
@@ -467,8 +493,8 @@ export function Landing() {
   const features = [
     {
       icon: <IconTruck />,
-      title_fr: "Livraison 58 Wilayas",
-      title_ar: "توصيل 58 ولاية",
+      title_fr: "Livraison 69 Wilayas",
+      title_ar: "توصيل 69 ولاية",
       desc_fr: "Réseau logistique couvrant toutes les wilayas d'Algérie. Expédition sous 24H.",
       desc_ar: "شبكة لوجستية تغطي جميع ولايات الجزائر. شحن خلال 24 ساعة.",
     },
@@ -504,34 +530,12 @@ export function Landing() {
       icon: <IconBox />,
       title_fr: "Stock Permanent",
       title_ar: "مخزون دائم",
-      desc_fr: "Plus de 500 références en stock permanent. Réapprovisionnement quotidien.",
-      desc_ar: "أكثر من 500 مرجع في المخزون الدائم. إعادة تموين يومي.",
+      desc_fr: `Plus de ${activeProductCount > 0 ? activeProductCount : "500"} références en stock permanent. Réapprovisionnement quotidien.`,
+      desc_ar: `أكثر من ${activeProductCount > 0 ? activeProductCount : "500"} مرجع في المخزون الدائم. إعادة تموين يومي.`,
     },
   ];
 
-  const testimonials = [
-    {
-      name: "Karim B.",
-      location: "Alger",
-      rating: 5,
-      text_fr: "Tapis de sol excellent, parfaitement adaptés à ma Clio 4. Livraison en 2 jours à Alger. Je recommande vivement Auto Style !",
-      text_ar: "سجاد رائع يناسب سيارتي تماماً. التوصيل خلال يومين. أنصح بـ Auto Style بشدة!",
-    },
-    {
-      name: "Fatima Z.",
-      location: "Oran",
-      rating: 5,
-      text_fr: "Support téléphone magnétique de très bonne qualité. Prix abordable et emballage soigné. Commande confirmée très rapidement.",
-      text_ar: "حامل الهاتف المغناطيسي بجودة ممتازة. سعر معقول وتغليف أنيق. الطلب تأكد بسرعة.",
-    },
-    {
-      name: "Mehdi L.",
-      location: "Constantine",
-      rating: 5,
-      text_fr: "Ma dashcam 4K est arrivée en parfait état. L'image de nuit est bluffante. Paiement à la livraison — aucun risque !",
-      text_ar: "كاميرا الداش 4K وصلت بحالة ممتازة. الصورة الليلية مذهلة. الدفع عند الاستلام — بلا مخاطرة!",
-    },
-  ];
+  const testimonials = dbReviews ?? [];
 
 
   return (
@@ -641,8 +645,8 @@ export function Landing() {
               transition={{ delay: 0.55 }}
             >
               {lang === "ar"
-                ? "إكسسوارات السيارات الأفضل في الجزائر — إضاءة، صوتيات، حماية، وأكثر. توصيل سريع لـ58 ولاية مع الدفع عند الاستلام."
-                : "Accessoires automobiles premium — éclairage, audio, protection intérieure et plus. Livraison rapide dans les 58 wilayas. Paiement à la livraison."}
+                ? "إكسسوارات السيارات الأفضل في الجزائر — إضاءة، صوتيات، حماية، وأكثر. توصيل سريع لـ69 ولاية مع الدفع عند الاستلام."
+                : "Accessoires automobiles premium — éclairage, audio, protection intérieure et plus. Livraison rapide dans les 69 wilayas. Paiement à la livraison."}
             </motion.p>
 
             {/* CTAs */}
@@ -941,46 +945,55 @@ export function Landing() {
       </section>
 
       {/* ══════════════════════════════════════════════════════ TESTIMONIALS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
-        <SectionHeader
-          tag={lang === "ar" ? "آراء عملائنا" : "Avis clients"}
-          title={lang === "ar" ? "يثقون بنا" : "ILS NOUS\nFONT CONFIANCE"}
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {testimonials.map(({ name, location, rating, text_fr, text_ar }, i) => (
-            <motion.div
-              key={name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
-            >
-              <BentoPanel className="p-6 flex flex-col gap-4 h-full">
-                {/* Stars */}
-                <div className="flex gap-1">
-                  {Array.from({ length: rating }).map((_, j) => (
-                    <Star key={j} size={12} className="text-brand fill-brand" />
-                  ))}
-                </div>
-                {/* Text */}
-                <p className={cn("text-xs font-mono text-ink/80 leading-relaxed flex-1 italic", lang === "ar" && "font-ar text-sm not-italic")}>
-                  "{lang === "ar" ? text_ar : text_fr}"
-                </p>
-                {/* Author */}
-                <div className="border-t border-line/40 pt-4 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center">
-                    <span className="text-brand font-mono text-xs font-bold">{name[0]}</span>
+      {testimonials.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+          <SectionHeader
+            tag={lang === "ar" ? "آراء عملائنا" : "Avis clients"}
+            title={lang === "ar" ? "يثقون بنا" : "ILS NOUS\nFONT CONFIANCE"}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {testimonials.map((review, i) => (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+              >
+                <BentoPanel className="p-6 flex flex-col gap-4 h-full">
+                  {/* Stars */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: review.stars }).map((_, j) => (
+                      <Star key={j} size={12} className="text-brand fill-brand" />
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-xs font-mono text-ink font-semibold">{name}</p>
-                    <p className="text-[10px] font-mono text-muted">{location}</p>
+                  {/* Text */}
+                  <p className={cn("text-xs font-mono text-ink/80 leading-relaxed flex-1 italic", lang === "ar" && "font-ar text-sm not-italic")}>
+                    "{review.review_text}"
+                  </p>
+                  {/* Author */}
+                  <div className="border-t border-line/40 pt-4 flex items-center gap-3">
+                    {review.image_url ? (
+                      <img
+                        src={review.image_url}
+                        alt={review.client_name}
+                        className="w-8 h-8 rounded-full object-cover border border-line"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center">
+                        <span className="text-brand font-mono text-xs font-bold">
+                          {review.client_name[0]?.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <p className="text-xs font-mono text-ink font-semibold">{review.client_name}</p>
                   </div>
-                </div>
-              </BentoPanel>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+                </BentoPanel>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ══════════════════════════════════════════════════════ FINAL CTA */}
       <section className="relative overflow-hidden border-t border-line/30">
@@ -1002,8 +1015,8 @@ export function Landing() {
           </h2>
           <p className={cn("text-sm text-muted font-mono max-w-md", lang === "ar" && "font-ar text-base")}>
             {lang === "ar"
-              ? "أكثر من 500 منتج متاح الآن. الدفع عند الاستلام في جميع ولايات الجزائر."
-              : "Plus de 500 produits disponibles maintenant. Paiement à la livraison dans toutes les wilayas d'Algérie."}
+              ? `أكثر من ${activeProductCount > 0 ? activeProductCount : "500"} منتج متاح الآن. الدفع عند الاستلام في 69 ولاية.`
+              : `Plus de ${activeProductCount > 0 ? activeProductCount : "500"} produits disponibles. Paiement à la livraison dans les 69 wilayas d'Algérie.`}
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link to="/shop">

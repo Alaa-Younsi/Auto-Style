@@ -21,7 +21,7 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
 };
 
 function exportOrders(orders: Order[]) {
-  const headers = ["N° Commande", "Client", "Téléphone", "Wilaya", "Ville", "Adresse", "Notes", "Sous-total", "Livraison", "Total", "Statut", "Date"];
+  const headers = ["N° Commande", "Client", "Téléphone", "Wilaya", "Mairie", "Adresse", "Notes", "Sous-total", "Livraison", "Total", "Type livraison", "Statut", "Date"];
   const rows = orders.map((o) => [
     o.order_number,
     o.customer_name,
@@ -33,6 +33,7 @@ function exportOrders(orders: Order[]) {
     o.subtotal,
     o.shipping,
     o.total,
+    o.delivery_type ?? "home",
     o.status,
     new Date(o.created_at).toLocaleDateString("fr-DZ"),
   ]);
@@ -119,11 +120,11 @@ export function AdminOrders() {
               <tbody className="divide-y divide-line/30">
                 {orders.map((order) => (
                   <tr key={order.id} className="hover:bg-line/10 transition-colors">
-                    <td className="px-4 py-3 text-[10px] font-mono text-brand">{order.order_number}</td>
-                    <td className={cn("px-4 py-3 text-[10px] font-mono text-ink", lang === "ar" && "font-ar")}>{order.customer_name}</td>
+                    <td className="px-4 py-3 text-[10px] font-mono font-bold text-brand">{order.order_number}</td>
+                    <td className={cn("px-4 py-3 text-[10px] font-mono font-bold text-ink", lang === "ar" && "font-ar")}>{order.customer_name}</td>
                     <td className="px-4 py-3 text-[10px] font-mono text-muted">{order.wilaya.split(" - ")[1] ?? order.wilaya}</td>
                     <td className="px-4 py-3 text-[10px] font-mono text-muted">{formatDate(order.created_at, lang)}</td>
-                    <td className="px-4 py-3 text-[10px] font-mono text-ink">{formatPrice(order.total)}</td>
+                    <td className="px-4 py-3 text-[10px] font-mono font-bold text-ink">{formatPrice(order.total)}</td>
                     <td className="px-4 py-3">
                       <span className={cn("text-[9px] font-mono uppercase tracking-wider px-2 py-1 rounded-md border", STATUS_COLORS[order.status])}>
                         {t(`admin_order_status_${order.status}` as Parameters<typeof t>[0])}

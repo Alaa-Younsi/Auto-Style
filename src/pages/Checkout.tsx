@@ -1,9 +1,10 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Truck } from "lucide-react";
+import { Truck, Home, Building2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useCartStore } from "@/store/cart";
 import { useLang } from "@/i18n/LanguageProvider";
@@ -14,11 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { BentoPanel } from "@/components/ui/BentoPanel";
 import { WILAYAS } from "@/i18n/wilayas";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
 import type { TranslationKey } from "@/i18n/translations";
-
-const SHIPPING_FEE = 500;
-const FREE_SHIP_THRESHOLD = 5000;
 
 function buildSchema(t: (k: TranslationKey) => string) {
   return z.object({
@@ -27,8 +24,9 @@ function buildSchema(t: (k: TranslationKey) => string) {
       .string()
       .regex(/^(0|\+213)[5-7]\d{8}$/, t("val_phone")),
     wilaya: z.string().min(1, t("val_required")),
-    city: z.string().min(2, t("val_required")),
+    mairie: z.string().min(2, t("val_required")),
     address: z.string().min(10, t("val_address_min")),
+    delivery_type: z.enum(["home", "office"]),
     notes: z.string().optional(),
   });
 }
@@ -37,8 +35,9 @@ type FormValues = {
   customer_name: string;
   customer_phone: string;
   wilaya: string;
-  city: string;
+  mairie: string;
   address: string;
+  delivery_type: "home" | "office";
   notes?: string;
 };
 
@@ -47,17 +46,37 @@ export function Checkout() {
   const navigate = useNavigate();
   const { items, subtotal, clearCart } = useCartStore();
 
-  const sub = subtotal();
-  const shipping = sub >= FREE_SHIP_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = sub + shipping;
-
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(buildSchema(t)),
+    defaultValues: { delivery_type: "home" },
   });
+
+  const selectedWilaya = watch("wilaya");
+  const deliveryType = watch("delivery_type");
+
+  const { data: deliveryPrice } = useQuery({
+    queryKey: ["delivery-price", selectedWilaya],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("delivery_prices")
+        .select("home_price, office_price")
+        .eq("wilaya", selectedWilaya)
+        .single();
+      return data;
+    },
+    enabled: !!selectedWilaya,
+  });
+
+  const sub = subtotal();
+  const shipping = deliveryPrice
+    ? (deliveryType === "home" ? deliveryPrice.home_price : deliveryPrice.office_price)
+    : null;
+  const total = sub + (shipping ?? 0);
 
   if (items.length === 0) {
     return (
@@ -86,8 +105,9 @@ export function Checkout() {
       customer_name: values.customer_name,
       customer_phone: values.customer_phone,
       wilaya: values.wilaya,
-      city: values.city,
+      city: values.mairie,
       address: values.address,
+      delivery_type: values.delivery_type,
       notes: values.notes ?? null,
       language: lang,
     };
@@ -147,10 +167,10 @@ export function Checkout() {
                 {...register("wilaya")}
               />
               <Input
-                label={t("checkout_city")}
-                placeholder="Votre ville"
-                error={errors.city?.message}
-                {...register("city")}
+                label={t("checkout_mairie")}
+                placeholder={t("checkout_mairie_placeholder")}
+                error={errors.mairie?.message}
+                {...register("mairie")}
               />
               <Input
                 label={t("checkout_address")}
@@ -158,6 +178,69 @@ export function Checkout() {
                 error={errors.address?.message}
                 {...register("address")}
               />
+
+              {/* Delivery type */}
+              <div className="flex flex-col gap-2.5">
+                <p className="text-[10px] uppercase tracking-widest text-muted font-mono">
+                  {t("checkout_delivery_type")}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(["home", "office"] as const).map((type) => {
+                    const isSelected = deliveryType === type;
+                    const Icon = type === "home" ? Home : Building2;
+                    const label = type === "home" ? t("checkout_delivery_home") : t("checkout_delivery_office");
+                    const price_label =
+                      !selectedWilaya
+                        ? t("checkout_shipping_select_wilaya")
+                        : !deliveryPrice
+                        ? "…"
+                        : formatPrice(type === "home" ? deliveryPrice.home_price : deliveryPrice.office_price);
+
+                    return (
+                      <label
+                        key={type}
+                        className={cn(
+                          "flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all",
+                          isSelected
+                            ? "border-brand bg-brand/5"
+                            : "border-line hover:border-muted/60 bg-panel-2"
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          value={type}
+                          className="sr-only"
+                          {...register("delivery_type")}
+                        />
+                        <Icon size={16} className={isSelected ? "text-brand" : "text-muted"} />
+                        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                          <span
+                            className={cn(
+                              "text-[11px] font-mono font-semibold uppercase tracking-wide",
+                              isSelected ? "text-ink" : "text-muted",
+                              lang === "ar" && "font-ar text-xs normal-case tracking-normal"
+                            )}
+                          >
+                            {label}
+                          </span>
+                          <span className={cn("text-xs font-mono font-bold", isSelected ? "text-brand" : "text-muted/50")}>
+                            {price_label}
+                          </span>
+                        </div>
+                        <div
+                          className={cn(
+                            "w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center",
+                            isSelected ? "border-brand" : "border-line"
+                          )}
+                        >
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-brand" />}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase tracking-widest text-muted font-mono">
                   {t("checkout_notes")}
@@ -171,23 +254,14 @@ export function Checkout() {
               </div>
             </BentoPanel>
 
-            {/* COD notice */}
             <BentoPanel className="p-4 flex items-center gap-3 border-brand/30 bg-brand/5">
               <Truck size={16} className="text-brand flex-shrink-0" />
-              <p className={cn(
-                "text-xs font-mono text-ink/80",
-                lang === "ar" && "font-ar text-sm"
-              )}>
+              <p className={cn("text-xs font-mono text-ink/80", lang === "ar" && "font-ar text-sm")}>
                 {t("checkout_cod_notice")}
               </p>
             </BentoPanel>
 
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isSubmitting}
-              className="w-full"
-            >
+            <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">
               {isSubmitting ? t("checkout_submitting") : t("checkout_submit")}
             </Button>
           </form>
@@ -211,10 +285,7 @@ export function Checkout() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={cn(
-                        "text-[10px] font-mono text-ink truncate",
-                        lang === "ar" && "font-ar text-xs"
-                      )}>
+                      <p className={cn("text-[10px] font-mono text-ink truncate", lang === "ar" && "font-ar text-xs")}>
                         {lang === "ar" ? item.name_ar : item.name_fr}
                       </p>
                       <p className="text-[10px] text-muted font-mono">×{item.qty}</p>
@@ -233,15 +304,29 @@ export function Checkout() {
                 </div>
                 <div className="flex justify-between text-[10px] font-mono text-muted">
                   <span>{t("cart_shipping")}</span>
-                  <span className={shipping === 0 ? "text-brand" : "text-ink"}>
-                    {shipping === 0 ? t("cart_shipping_free") : formatPrice(shipping)}
+                  <span className="text-ink">
+                    {!selectedWilaya
+                      ? <span className="text-muted/40">—</span>
+                      : !deliveryPrice
+                      ? "…"
+                      : formatPrice(shipping ?? 0)}
                   </span>
                 </div>
+                {selectedWilaya && deliveryPrice && (
+                  <div className="flex items-center gap-1.5 text-[9px] font-mono text-muted/60">
+                    {deliveryType === "home" ? <Home size={9} /> : <Building2 size={9} />}
+                    <span>
+                      {deliveryType === "home" ? t("checkout_delivery_home") : t("checkout_delivery_office")}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm font-mono border-t border-line/50 pt-2 mt-1">
                   <span className="text-muted text-[10px] self-end uppercase tracking-widest">
                     {t("cart_total")}
                   </span>
-                  <span className="text-brand">{formatPrice(total)}</span>
+                  <span className="text-brand font-bold">
+                    {shipping !== null ? formatPrice(total) : "—"}
+                  </span>
                 </div>
               </div>
             </BentoPanel>

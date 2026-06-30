@@ -57,6 +57,17 @@ export const WILAYAS = [
   "56 - Djanet",
   "57 - El M'Ghair",
   "58 - El Meniaa",
+  "59 - Aflou",
+  "60 - El Abiodh Sidi Cheikh",
+  "61 - El Aricha",
+  "62 - El Kantara",
+  "63 - Barika",
+  "64 - Boussaâda",
+  "65 - Bir El Ater",
+  "66 - Ksar El Boukhari",
+  "67 - Ksar Chellala",
+  "68 - Aïn Oussara",
+  "69 - Messaad",
 ] as const;
 
 export type Wilaya = (typeof WILAYAS)[number];

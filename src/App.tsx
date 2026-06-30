@@ -20,6 +20,8 @@ import { AdminProductForm } from "@/pages/admin/ProductForm";
 import { AdminCategories } from "@/pages/admin/Categories";
 import { AdminOrders } from "@/pages/admin/Orders";
 import { AdminOrderDetail } from "@/pages/admin/OrderDetail";
+import { AdminDeliveryPrices } from "@/pages/admin/DeliveryPrices";
+import { AdminReviews } from "@/pages/admin/Reviews";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -67,6 +69,8 @@ export default function App() {
                 <Route path="categories" element={<AdminCategories />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="orders/:id" element={<AdminOrderDetail />} />
+                <Route path="delivery-prices" element={<AdminDeliveryPrices />} />
+                <Route path="reviews" element={<AdminReviews />} />
               </Route>
 
               {/* 404 */}

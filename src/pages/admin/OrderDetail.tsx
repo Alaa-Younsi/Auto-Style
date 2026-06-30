@@ -59,13 +59,13 @@ export function AdminOrderDetail() {
               { label: "Nom", value: order.customer_name },
               { label: "Téléphone", value: order.customer_phone },
               { label: t("admin_wilaya"), value: order.wilaya },
-              { label: t("checkout_city"), value: order.city },
+              { label: t("checkout_mairie"), value: order.city },
               { label: t("checkout_address"), value: order.address },
               ...(order.notes ? [{ label: t("checkout_notes"), value: order.notes }] : []),
             ].map(({ label, value }) => (
               <div key={label} className="flex gap-2">
                 <span className="text-[10px] font-mono text-muted min-w-[80px]">{label}:</span>
-                <span className={cn("text-[10px] font-mono text-ink", lang === "ar" && "font-ar")}>{value}</span>
+                <span className={cn("text-[10px] font-mono font-bold text-ink", lang === "ar" && "font-ar")}>{value}</span>
               </div>
             ))}
           </div>
@@ -92,15 +92,15 @@ export function AdminOrderDetail() {
           <div className="border-t border-line/40 pt-4 flex flex-col gap-1.5">
             <div className="flex justify-between text-[10px] font-mono text-muted">
               <span>{t("cart_subtotal")}</span>
-              <span className="text-ink">{formatPrice(order.subtotal)}</span>
+              <span className="text-ink font-bold">{formatPrice(order.subtotal)}</span>
             </div>
             <div className="flex justify-between text-[10px] font-mono text-muted">
               <span>{t("cart_shipping")}</span>
-              <span className="text-ink">{formatPrice(order.shipping)}</span>
+              <span className="text-ink font-bold">{formatPrice(order.shipping)}</span>
             </div>
             <div className="flex justify-between text-xs font-mono border-t border-line/40 pt-2 mt-1">
               <span className="text-muted text-[10px] self-end">{t("admin_total")}</span>
-              <span className="text-brand">{formatPrice(order.total)}</span>
+              <span className="text-brand font-bold">{formatPrice(order.total)}</span>
             </div>
           </div>
           <p className="text-[10px] font-mono text-muted/50">

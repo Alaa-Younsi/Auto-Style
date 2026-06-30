@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Package, Tag, ShoppingBag, LogOut, ChevronLeft, Menu, X } from "lucide-react";
+import { LayoutDashboard, Package, Tag, ShoppingBag, LogOut, ChevronLeft, Menu, X, Truck, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useLang } from "@/i18n/LanguageProvider";
@@ -29,6 +29,8 @@ export function AdminLayout() {
     { to: "/admin/products", icon: Package, label: t("admin_products") },
     { to: "/admin/categories", icon: Tag, label: t("admin_categories") },
     { to: "/admin/orders", icon: ShoppingBag, label: t("admin_orders") },
+    { to: "/admin/delivery-prices", icon: Truck, label: t("admin_delivery_prices") },
+    { to: "/admin/reviews", icon: Star, label: t("admin_reviews") },
   ];
 
   const isActive = (to: string, exact?: boolean) =>

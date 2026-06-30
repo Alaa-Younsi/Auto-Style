@@ -18,8 +18,8 @@ export function CircleButton({ label, size = 140, className, disabled, onClick, 
   const spokeW = size * 0.05;
   const spokes = [90, 210, 330];
 
-  /* Ring text on a path just inside the rim */
-  const textR = innerR + rimW * 0.45;
+  /* Ring text orbits OUTSIDE the rim */
+  const textR = outerR + 18;
   const textCircumference = 2 * Math.PI * textR;
   const ringText = `${label} · ${label} · ${label} · `;
   const letterSpacing = textCircumference / ringText.length - 7.5;
@@ -34,11 +34,18 @@ export function CircleButton({ label, size = 140, className, disabled, onClick, 
       "relative flex items-center",
       lang === "ar" ? "flex-row-reverse gap-5" : "gap-5"
     )}>
-      {/* Floating label badge */}
-      <div className={cn(
-        "flex flex-col gap-2 pointer-events-none select-none",
-        lang === "ar" && "items-end"
-      )}>
+      {/* Floating label badge — also clickable */}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onClick}
+        className={cn(
+          "flex flex-col gap-2 select-none border-0 bg-transparent p-0 text-start",
+          !disabled ? "cursor-pointer hover:opacity-90 transition-opacity" : "cursor-not-allowed opacity-40",
+          lang === "ar" && "items-end"
+        )}
+        aria-label={floatLabel}
+      >
         <div className={cn(
           "flex items-center gap-2 bg-brand text-white rounded-xl px-4 py-2.5",
           "shadow-[0_4px_20px_-4px_rgba(225,29,42,0.6)]",
@@ -60,7 +67,7 @@ export function CircleButton({ label, size = 140, className, disabled, onClick, 
           "h-px bg-gradient-to-r from-brand to-transparent w-12",
           lang === "ar" && "bg-gradient-to-l ms-auto"
         )} />
-      </div>
+      </button>
 
       {/* Steering wheel */}
       <button
@@ -179,25 +186,25 @@ export function CircleButton({ label, size = 140, className, disabled, onClick, 
             cx={cx} cy={cx} r={hubR * 0.42}
             fill="rgb(var(--c-panel))"
           />
-          {/* "+" icon in hub center */}
+          {/* "+" icon in hub center — uses ink color so it's visible in both light and dark mode */}
           <line
             x1={cx - hubR * 0.22} y1={cx}
             x2={cx + hubR * 0.22} y2={cx}
-            stroke="white" strokeWidth={hubR * 0.14} strokeLinecap="round"
+            stroke="rgb(var(--c-ink))" strokeWidth={hubR * 0.14} strokeLinecap="round"
             opacity="0.9"
           />
           <line
             x1={cx} y1={cx - hubR * 0.22}
             x2={cx} y2={cx + hubR * 0.22}
-            stroke="white" strokeWidth={hubR * 0.14} strokeLinecap="round"
+            stroke="rgb(var(--c-ink))" strokeWidth={hubR * 0.14} strokeLinecap="round"
             opacity="0.9"
           />
 
-          {/* Rotating ring text — animateTransform rotates around the wheel center */}
+          {/* Orbiting ring text — rotates around the outside of the wheel */}
           <g>
             <text
-              fill="rgba(244,244,245,0.45)"
-              fontFamily="Rajdhani, sans-serif"
+              fill="#E11D2A"
+              fontFamily="'IBM Plex Mono', monospace"
               fontSize="7.5"
               letterSpacing={letterSpacing}
             >

@@ -76,14 +76,14 @@ export function AdminProducts() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <p className={cn("text-xs font-mono text-ink", lang === "ar" && "font-ar")}>
+                      <p className={cn("text-xs font-mono font-bold text-ink", lang === "ar" && "font-ar")}>
                         {product.name_fr}
                       </p>
                       {product.style_code && (
                         <p className="text-[9px] font-mono text-muted mt-0.5">{product.style_code}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-xs font-mono text-brand">{formatPrice(product.price)}</td>
+                    <td className="px-4 py-3 text-xs font-mono font-bold text-brand">{formatPrice(product.price)}</td>
                     <td className="px-4 py-3">
                       <span className={cn(
                         "text-[10px] font-mono",

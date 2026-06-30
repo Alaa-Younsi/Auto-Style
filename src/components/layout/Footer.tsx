@@ -1,10 +1,23 @@
 import { Link, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import logo from "@/assets/auto-style-logo.png";
 import { useLang } from "@/i18n/LanguageProvider";
 
 export function Footer() {
   const { t, lang } = useLang();
   const location = useLocation();
+
+  const { data: productCount } = useQuery({
+    queryKey: ["active-product-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("products")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+      return count ?? 0;
+    },
+  });
 
   if (location.pathname.startsWith("/admin")) return null;
 
@@ -66,8 +79,8 @@ export function Footer() {
           </h3>
           <p className="text-xs font-mono text-muted leading-relaxed">
             {lang === "ar"
-              ? "توصيل لجميع ولايات الجزائر الـ58 في غضون 24-48 ساعة."
-              : "Livraison dans les 58 wilayas d'Algérie sous 24-48H."}
+              ? "توصيل لجميع ولايات الجزائر الـ69 في غضون 24-48 ساعة."
+              : "Livraison dans les 69 wilayas d'Algérie sous 24-48H."}
           </p>
           <p className="text-xs font-mono text-muted leading-relaxed">
             {t("checkout_cod_notice")}
@@ -84,8 +97,8 @@ export function Footer() {
           </p>
           <div className="mt-2 flex flex-col gap-2">
             {[
-              { label: lang === "ar" ? "+500 منتج" : "+500 Produits", color: "text-ink" },
-              { label: lang === "ar" ? "58 ولاية" : "58 Wilayas", color: "text-ink" },
+              { label: lang === "ar" ? `+${productCount ?? "..."} منتج` : `+${productCount ?? "..."} Produits`, color: "text-ink" },
+              { label: lang === "ar" ? "69 ولاية" : "69 Wilayas", color: "text-ink" },
               { label: lang === "ar" ? "دفع عند الاستلام" : "Cash à la livraison", color: "text-brand" },
             ].map(({ label, color }) => (
               <div key={label} className="flex items-center gap-2">

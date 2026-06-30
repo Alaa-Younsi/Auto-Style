@@ -157,9 +157,9 @@ export function AdminDashboard() {
                 to={`/admin/orders/${order.id}`}
                 className="flex items-center gap-4 py-3 hover:bg-line/20 -mx-2 px-2 rounded-lg transition-colors"
               >
-                <span className="text-[10px] font-mono text-brand">{order.order_number}</span>
+                <span className="text-[10px] font-mono font-bold text-brand">{order.order_number}</span>
                 <span className={cn(
-                  "text-[10px] font-mono",
+                  "text-[10px] font-mono font-bold text-ink",
                   lang === "ar" && "font-ar"
                 )}>
                   {order.customer_name}
@@ -170,7 +170,7 @@ export function AdminDashboard() {
                 <span className={cn("text-[10px] font-mono", STATUS_COLORS[order.status])}>
                   {t(`admin_order_status_${order.status}` as Parameters<typeof t>[0])}
                 </span>
-                <span className="text-xs font-mono text-ink">{formatPrice(order.total)}</span>
+                <span className="text-xs font-mono font-bold text-ink">{formatPrice(order.total)}</span>
               </Link>
             ))}
           </div>
