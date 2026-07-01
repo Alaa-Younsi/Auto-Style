@@ -53,7 +53,7 @@ export function Shop() {
       </div>
 
       {/* Search + controls bar */}
-      <div className="sticky top-16 z-20 bg-bg/90 backdrop-blur-md border-b border-line/50">
+      <div className="sticky top-20 z-20 bg-bg/90 backdrop-blur-md border-b border-line/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
           {/* Search */}
           <div className="relative flex-1 max-w-sm">

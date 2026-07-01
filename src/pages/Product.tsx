@@ -93,6 +93,10 @@ export function Product() {
     openCart();
   };
 
+  const handleOrderNow = () => {
+    document.getElementById("checkout-form")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const VideoBlock = ({ className }: { className?: string }) =>
     displayProduct.video_url ? (
       <div className={cn("rounded-bento-lg overflow-hidden bg-black border border-line/30", className)}>
@@ -353,6 +357,8 @@ export function Product() {
                   size={140}
                   disabled={!canAdd}
                   onClick={handleAddToCart}
+                  badgeLabel={lang === "ar" ? "اطلب الآن" : "Commandez maintenant"}
+                  onBadgeClick={handleOrderNow}
                   aria-label={t("product_add_to_cart")}
                 />
               </div>
@@ -388,7 +394,7 @@ export function Product() {
 
         {/* ── Inline Checkout ── */}
         {displayProduct.stock > 0 && (
-          <div className="mt-12 pt-12 border-t border-line/30">
+          <div id="checkout-form" className="mt-12 pt-12 border-t border-line/30">
             <InlineCheckout
               productId={displayProduct.id}
               name_fr={displayProduct.name_fr}

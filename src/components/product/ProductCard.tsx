@@ -39,10 +39,49 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link to={`/product/${product.slug}`}>
       <motion.div
-        whileHover={{ y: -4 }}
+        initial="idle"
+        whileHover="hover"
+        variants={{ idle: { y: 0 }, hover: { y: -4 } }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
-        <BentoPanel className="group overflow-hidden cursor-pointer h-full flex flex-col">
+        <BentoPanel className="group overflow-hidden cursor-pointer h-full flex flex-col relative">
+
+          {/* ── Racing stripe: diagonal red streak on hover ── */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-10 rounded-bento" aria-hidden>
+            <motion.div
+              className="absolute top-[-20%] bottom-[-20%] w-[3px] rounded-full"
+              style={{
+                background: "linear-gradient(to bottom, transparent, rgba(225,29,42,0.7) 30%, rgba(225,29,42,0.7) 70%, transparent)",
+                skewX: -12,
+                left: 0,
+              }}
+              variants={{
+                idle: { x: "-80px", opacity: 0 },
+                hover: {
+                  x: "500px",
+                  opacity: [0, 1, 1, 0],
+                  transition: { duration: 0.65, ease: [0.4, 0, 0.2, 1] },
+                },
+              }}
+            />
+            <motion.div
+              className="absolute top-[-20%] bottom-[-20%] w-[1.5px] rounded-full"
+              style={{
+                background: "linear-gradient(to bottom, transparent, rgba(225,29,42,0.35) 30%, rgba(225,29,42,0.35) 70%, transparent)",
+                skewX: -12,
+                left: 0,
+              }}
+              variants={{
+                idle: { x: "-80px", opacity: 0 },
+                hover: {
+                  x: "500px",
+                  opacity: [0, 0.8, 0.8, 0],
+                  transition: { duration: 0.65, ease: [0.4, 0, 0.2, 1], delay: 0.07 },
+                },
+              }}
+            />
+          </div>
+
           {/* Image */}
           <div className="relative aspect-square bg-panel-2 overflow-hidden">
             {primaryImage ? (

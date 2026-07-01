@@ -20,6 +20,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import logo from "@/assets/auto-style-logo.png";
 import { cn } from "@/lib/utils";
 import type { ClientReview } from "@/types/db";
+import { PageRacingTrack } from "@/components/effects/RacingTrack";
 
 /* ─── SVG ICONS ─────────────────────────────────────────────────────────── */
 
@@ -376,6 +377,92 @@ function FloatingBadge({ label, price, delay, x, y }: { label: string; price: st
 }
 
 
+/* ─── CAR EFFECT COMPONENTS ──────────────────────────────────────────────── */
+
+/** Mini checkered flag SVG — used in section headers */
+function CheckeredFlag({ className }: { className?: string }) {
+  return (
+    <svg
+      width="12" height="12" viewBox="0 0 12 12"
+      aria-hidden
+      className={cn("inline-block fill-current flex-shrink-0", className)}
+    >
+      {Array.from({ length: 4 }, (_, r) =>
+        Array.from({ length: 4 }, (_, c) =>
+          (r + c) % 2 === 0 ? (
+            <rect key={`${r}-${c}`} x={c * 3} y={r * 3} width={3} height={3} />
+          ) : null
+        )
+      )}
+    </svg>
+  );
+}
+
+/** Animated half-circle speedometer gauge.
+ *  cx=50, cy=52, r=40 → arc endpoints (10,52) and (90,52), top at (50,12).
+ *  All tick marks stay at 25/50/75% — never outside the 100×56 viewBox.
+ *  Needle animates via coordinate interpolation (no SVG transform-origin bugs).
+ */
+function SpeedometerArc({ progress, delay = 0 }: { progress: number; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true });
+
+  const cx = 50, cy = 52, r = 40;
+  const arc = `M ${cx - r},${cy} A ${r},${r} 0 0,0 ${cx + r},${cy}`;
+  const circ = Math.PI * r;
+
+  // Needle tip — computed directly so there are no SVG transform-origin issues
+  const needleAngle = Math.PI * (1 - progress); // π (left) → 0 (right)
+  const nx = cx + r * 0.72 * Math.cos(needleAngle);
+  const ny = cy - r * 0.72 * Math.sin(needleAngle);
+
+  return (
+    <div ref={ref} className="flex justify-center mt-1" aria-hidden>
+      <svg width={100} height={56} viewBox="0 0 100 56">
+        {/* Track */}
+        <path d={arc} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={5} strokeLinecap="round" />
+        {/* Fill arc */}
+        <motion.path
+          d={arc}
+          fill="none"
+          stroke="#E11D2A"
+          strokeWidth={5}
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={isInView ? { strokeDashoffset: circ * (1 - progress) } : {}}
+          transition={{ duration: 1.8, ease: [0.23, 1, 0.32, 1], delay }}
+        />
+        {/* Tick marks only at 25%, 50%, 75% — guaranteed inside viewBox */}
+        {[0.25, 0.5, 0.75].map((t) => {
+          const a = Math.PI * (1 - t);
+          const x1 = cx + r * Math.cos(a);
+          const y1 = cy - r * Math.sin(a);
+          const x2 = cx + (r - 10) * Math.cos(a);
+          const y2 = cy - (r - 10) * Math.sin(a);
+          return (
+            <line key={t} x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke="rgba(255,255,255,0.22)" strokeWidth={1.5} strokeLinecap="round" />
+          );
+        })}
+        {/* Needle — animates tip coordinates, no rotation transform needed */}
+        <motion.line
+          x1={cx} y1={cy}
+          stroke="#E11D2A"
+          strokeWidth={2.2}
+          strokeLinecap="round"
+          initial={{ x2: cx - r * 0.72, y2: cy }}
+          animate={isInView ? { x2: nx, y2: ny } : { x2: cx - r * 0.72, y2: cy }}
+          transition={{ duration: 1.8, ease: [0.23, 1, 0.32, 1], delay }}
+        />
+        {/* Hub */}
+        <circle cx={cx} cy={cy} r={4.5} fill="#E11D2A" />
+        <circle cx={cx} cy={cy} r={1.8} fill="rgb(var(--c-bg))" />
+      </svg>
+    </div>
+  );
+}
+
 /* ─── SECTION HEADER ──────────────────────────────────────────────────────── */
 function SectionHeader({ tag, title, subtitle }: { tag: string; title: string; subtitle?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -388,7 +475,11 @@ function SectionHeader({ tag, title, subtitle }: { tag: string; title: string; s
       transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
       className="flex flex-col gap-2 mb-10"
     >
-      <span className="text-[9px] font-mono uppercase tracking-[0.4em] text-brand">{tag}</span>
+      <span className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.4em] text-brand">
+        <CheckeredFlag />
+        {tag}
+        <CheckeredFlag />
+      </span>
       <h2 className="font-mono font-bold text-3xl sm:text-5xl uppercase tracking-tight text-ink leading-none whitespace-pre-line">
         {title}
       </h2>
@@ -405,6 +496,7 @@ export function Landing() {
   const { data: featuredProducts } = useProducts({ featured: true, limit: 4 });
   const { data: categoriesData } = useCategories();
   const heroRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const { data: activeProductCount = 0 } = useQuery({
     queryKey: ["active-product-count"],
@@ -457,10 +549,10 @@ export function Landing() {
     })), []);
 
   const stats = [
-    { value: activeProductCount, suffix: "+", label_fr: "Produits", label_ar: "منتج" },
-    { value: 69, suffix: "", label_fr: "Wilayas", label_ar: "ولاية" },
-    { value: 24, suffix: "H", label_fr: "Livraison", label_ar: "توصيل" },
-    { value: 100, suffix: "%", label_fr: "Satisfaits", label_ar: "رضا" },
+    { value: activeProductCount, suffix: "+", label_fr: "Produits", label_ar: "منتج", gauge: 0.75 },
+    { value: 69, suffix: "", label_fr: "Wilayas", label_ar: "ولاية", gauge: 1.0 },
+    { value: 24, suffix: "H", label_fr: "Livraison", label_ar: "توصيل", gauge: 0.88 },
+    { value: 100, suffix: "%", label_fr: "Satisfaits", label_ar: "رضا", gauge: 1.0 },
   ];
 
   const howItWorks = [
@@ -539,7 +631,10 @@ export function Landing() {
 
 
   return (
-    <div className="overflow-x-hidden">
+    <div ref={pageRef} className="overflow-x-hidden relative isolate">
+
+      {/* Full-page figure-8 racing track — rendered behind all sections */}
+      <PageRacingTrack containerRef={pageRef} />
 
       {/* ══════════════════════════════════════════════════════ HERO */}
       <section
@@ -772,10 +867,10 @@ export function Landing() {
       {/* ══════════════════════════════════════════════════════ STATS */}
       <section className="border-b border-line/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 grid grid-cols-2 sm:grid-cols-4 gap-px bg-line/20">
-          {stats.map(({ value, suffix, label_fr, label_ar }, i) => (
+          {stats.map(({ value, suffix, label_fr, label_ar, gauge }, i) => (
             <motion.div
               key={label_fr}
-              className="bg-bg flex flex-col items-center justify-center gap-1 py-8 px-4"
+              className="bg-bg flex flex-col items-center justify-center py-6 px-4"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -784,7 +879,8 @@ export function Landing() {
               <span className="font-mono font-black text-4xl sm:text-5xl text-brand leading-none">
                 <AnimatedCounter target={value} suffix={suffix} />
               </span>
-              <span className={cn("text-[10px] font-mono text-muted uppercase tracking-widest", lang === "ar" && "font-ar text-xs")}>
+              <SpeedometerArc progress={gauge} delay={i * 0.1 + 0.3} />
+              <span className={cn("text-[10px] font-mono text-muted uppercase tracking-widest mt-1", lang === "ar" && "font-ar text-xs")}>
                 {lang === "ar" ? label_ar : label_fr}
               </span>
             </motion.div>
@@ -833,8 +929,11 @@ export function Landing() {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-            {/* Connecting line */}
-            <div className="hidden md:block absolute top-10 left-[calc(33%+24px)] right-[calc(33%+24px)] h-px bg-gradient-to-r from-brand/30 via-brand/60 to-brand/30" />
+            {/* Road-style dashed center stripe */}
+            <div
+              className="hidden md:block absolute top-10 left-[calc(33%+24px)] right-[calc(33%+24px)] h-[2px] overflow-hidden"
+              style={{ backgroundImage: "repeating-linear-gradient(to right, rgba(225,29,42,0.55) 0, rgba(225,29,42,0.55) 16px, transparent 16px, transparent 28px)" }}
+            />
 
             {howItWorks.map(({ icon, step, title_fr, title_ar, desc_fr, desc_ar }, i) => (
               <motion.div
