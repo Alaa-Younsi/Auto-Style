@@ -107,10 +107,10 @@ export function ProductCard({ product }: ProductCardProps) {
             <div className="absolute inset-0 flex items-end justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <button
                 onClick={handleQuickAdd}
-                className="w-9 h-9 rounded-full bg-brand hover:bg-brand-light text-ink flex items-center justify-center transition-colors shadow-lg"
+                className="group/qa w-9 h-9 rounded-full bg-brand hover:bg-brand-light text-ink flex items-center justify-center transition-colors shadow-lg"
                 aria-label={t("product_add_to_cart")}
               >
-                <ShoppingBag size={14} />
+                <ShoppingBag size={14} className="transition-transform duration-300 group-hover/qa:rotate-90" />
               </button>
             </div>
           </div>
@@ -130,6 +130,10 @@ export function ProductCard({ product }: ProductCardProps) {
                   {formatPrice(product.compare_at_price)}
                 </span>
               )}
+            </div>
+            {/* RPM tick — fills brand-red on hover, a small nod to a gauge */}
+            <div className="h-[2px] w-full bg-line/30 rounded-full overflow-hidden" aria-hidden>
+              <div className="h-full w-full bg-brand rounded-full scale-x-0 group-hover:scale-x-100 origin-left rtl:origin-right transition-transform duration-300 ease-out" />
             </div>
           </div>
         </BentoPanel>

@@ -106,6 +106,7 @@ export interface DeliveryPrice {
   wilaya: string;
   home_price: number;
   office_price: number;
+  active: boolean;
   updated_at: string;
 }
 

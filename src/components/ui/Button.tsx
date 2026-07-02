@@ -39,7 +39,7 @@ export function Button({
         "transition-all duration-150 active:scale-[0.94]",
         "disabled:opacity-40 disabled:cursor-not-allowed",
         {
-          primary: "bg-brand text-ink hover:bg-brand-light rounded-lg",
+          primary: "bg-brand text-ink hover:bg-brand-light rounded-lg hover:shadow-glow-sm",
           ghost: "text-muted hover:text-ink bg-transparent hover:bg-line/40 rounded-lg",
           outline: "border border-line text-ink hover:border-brand hover:text-brand bg-transparent rounded-lg",
           danger: "bg-brand/10 text-brand border border-brand/30 hover:bg-brand hover:text-ink rounded-lg",
@@ -55,18 +55,14 @@ export function Button({
       disabled={disabled}
       {...props}
     >
-      {/* Speed-line shimmer — CSS group-hover, no Framer Motion needed */}
-      {hasShimmer && (
-        <span
-          aria-hidden
-          className={cn(
-            "absolute inset-y-0 w-[50%] pointer-events-none -skew-x-12",
-            "bg-gradient-to-r from-transparent via-white/[0.14] to-transparent",
-            "-translate-x-[80%] group-hover:translate-x-[300%]",
-            "transition-transform duration-[420ms] ease-out"
-          )}
-        />
-      )}
+      {/* Ignition tick — brand bar on the inline-start edge, grows on hover */}
+      <span
+        aria-hidden
+        className="absolute inset-y-0 start-0 w-[3px] bg-ink/25 scale-y-[0.4] group-hover:scale-y-100 group-hover:bg-ink/50 origin-center transition-all duration-200 pointer-events-none"
+      />
+
+      {/* Headlight sweep — shared racing hover effect */}
+      {hasShimmer && <span aria-hidden className="fx-sweep" />}
 
       {/* Click ripple — expands from the exact click point */}
       {ripples.map(({ id, x, y }) => (

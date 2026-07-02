@@ -6,6 +6,7 @@ import { useLang } from "@/i18n/LanguageProvider";
 import { BentoPanel } from "@/components/ui/BentoPanel";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { cn } from "@/lib/utils";
 import { WILAYAS } from "@/i18n/wilayas";
 import type { DeliveryPrice } from "@/types/db";
 
@@ -53,6 +54,19 @@ export function AdminDeliveryPrices() {
           return next;
         });
       }, 2000);
+    },
+  });
+
+  const toggleActive = useMutation({
+    mutationFn: async (row: DeliveryPrice) => {
+      const { error } = await supabase
+        .from("delivery_prices")
+        .update({ active: !row.active })
+        .eq("id", row.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["delivery-prices-admin"] });
     },
   });
 
@@ -107,10 +121,11 @@ export function AdminDeliveryPrices() {
 
       <BentoPanel className="overflow-hidden">
         {/* Header */}
-        <div className="grid grid-cols-[1fr_140px_140px_80px] gap-2 px-4 py-3 border-b border-line/40 bg-panel-2">
+        <div className="grid grid-cols-[1fr_140px_140px_110px_80px] gap-2 px-4 py-3 border-b border-line/40 bg-panel-2">
           <span className="text-[10px] font-mono uppercase tracking-widest text-muted">Wilaya</span>
           <span className="text-[10px] font-mono uppercase tracking-widest text-muted">{t("admin_home_price")}</span>
           <span className="text-[10px] font-mono uppercase tracking-widest text-muted">{t("admin_office_price")}</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted">{t("admin_delivery_status")}</span>
           <span />
         </div>
 
@@ -126,11 +141,15 @@ export function AdminDeliveryPrices() {
               if (!row) return null;
               const isSaved = savedWilayas.has(wilaya);
               const isDirty = !!edits[wilaya];
+              const isActive = row.active;
 
               return (
                 <div
                   key={wilaya}
-                  className="grid grid-cols-[1fr_140px_140px_80px] gap-2 items-center px-4 py-2.5 hover:bg-line/10 transition-colors"
+                  className={cn(
+                    "grid grid-cols-[1fr_140px_140px_110px_80px] gap-2 items-center px-4 py-2.5 hover:bg-line/10 transition-colors",
+                    !isActive && "opacity-50"
+                  )}
                 >
                   <span className="text-xs font-mono text-ink/80 truncate">{wilaya}</span>
 
@@ -151,6 +170,19 @@ export function AdminDeliveryPrices() {
                     onChange={(e) => setVal(wilaya, "office_price", e.target.value)}
                     className="w-full bg-panel-2 border border-line rounded px-2 py-1.5 text-xs font-mono text-ink focus:outline-none focus:border-muted transition-colors"
                   />
+
+                  <button
+                    onClick={() => toggleActive.mutate(row)}
+                    disabled={toggleActive.isPending}
+                    className={cn(
+                      "text-[10px] font-mono uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors disabled:opacity-40",
+                      isActive
+                        ? "border-brand/30 text-brand hover:bg-brand hover:text-ink"
+                        : "border-line text-muted hover:border-brand/40 hover:text-brand"
+                    )}
+                  >
+                    {isActive ? t("admin_wilaya_disable") : t("admin_wilaya_enable")}
+                  </button>
 
                   <div className="flex justify-center">
                     {isSaved ? (

@@ -59,6 +59,21 @@ export function Checkout() {
   const selectedWilaya = watch("wilaya");
   const deliveryType = watch("delivery_type");
 
+  const { data: activeWilayas } = useQuery({
+    queryKey: ["active-wilayas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("delivery_prices")
+        .select("wilaya")
+        .eq("active", true);
+      if (error) throw error;
+      return new Set((data ?? []).map((r) => r.wilaya));
+    },
+  });
+
+  const wilayaOptions = (activeWilayas ? WILAYAS.filter((w) => activeWilayas.has(w)) : WILAYAS)
+    .map((w) => ({ value: w, label: w }));
+
   const { data: deliveryPrice } = useQuery({
     queryKey: ["delivery-price", selectedWilaya],
     queryFn: async () => {
@@ -162,7 +177,7 @@ export function Checkout() {
               <Select
                 label={t("checkout_wilaya")}
                 placeholder={t("checkout_wilaya_placeholder")}
-                options={WILAYAS.map((w) => ({ value: w, label: w }))}
+                options={wilayaOptions}
                 error={errors.wilaya?.message}
                 {...register("wilaya")}
               />

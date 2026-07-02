@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useLang } from "@/i18n/LanguageProvider";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import logo from "@/assets/auto-style-logo.png";
 import { cn } from "@/lib/utils";
 
 export function AdminLayout() {
   const { session, loading, signOut } = useAuth();
-  const { t } = useLang();
+  const { t, dir } = useLang();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -68,7 +69,10 @@ export function AdminLayout() {
       </nav>
 
       <div className="p-3 border-t border-line/40 flex flex-col gap-2">
-        <LanguageToggle />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <LanguageToggle />
+        </div>
         <button
           onClick={signOut}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[10px] font-mono uppercase tracking-wider text-muted hover:text-brand hover:bg-brand/5 transition-colors w-full"
@@ -106,9 +110,9 @@ export function AdminLayout() {
               onClick={() => setSidebarOpen(false)}
             />
             <motion.aside
-              initial={{ x: "-100%" }}
+              initial={{ x: dir === "rtl" ? "100%" : "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
+              exit={{ x: dir === "rtl" ? "100%" : "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed inset-y-0 start-0 w-56 bg-panel border-e border-line/50 z-50 flex flex-col md:hidden"
             >
@@ -129,6 +133,8 @@ export function AdminLayout() {
             <Menu size={18} />
           </button>
           <img src={logo} alt="Auto Style" className="h-9 w-auto" />
+          <div className="flex-1" />
+          <ThemeToggle />
         </div>
 
         <main className="flex-1 overflow-y-auto">

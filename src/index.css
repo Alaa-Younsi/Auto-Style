@@ -13,6 +13,11 @@ html[data-theme="dark"] {
   --c-ink: 244 244 245;
   --c-muted: 138 138 144;
   --c-brand: 225 29 42;
+  --c-track: 30 30 38;
+  --c-track-2: 15 15 20;
+  --c-car-hi: 56 56 62;
+  --c-car-mid: 19 19 22;
+  --c-car-lo: 12 12 14;
 }
 
 html[data-theme="light"] {
@@ -23,6 +28,11 @@ html[data-theme="light"] {
   --c-line: 214 214 220;
   --c-ink: 24 24 27;
   --c-muted: 107 107 112;
+  --c-track: 216 216 224;
+  --c-track-2: 228 228 234;
+  --c-car-hi: 82 82 92;
+  --c-car-mid: 40 40 48;
+  --c-car-lo: 26 26 32;
 }
 
 @layer base {
@@ -145,5 +155,104 @@ body {
   }
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Reusable headlight-sweep band — child of a `.group`, reacts to group-hover */
+  .fx-sweep {
+    position: absolute;
+    inset-block: 0;
+    width: 50%;
+    pointer-events: none;
+    transform: skewX(-12deg) translateX(-130%);
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgb(var(--c-ink) / 0.1),
+      transparent
+    );
+    transition: transform 480ms ease-out;
+  }
+  .group:hover .fx-sweep {
+    transform: skewX(-12deg) translateX(280%);
+  }
+  [dir="rtl"] .fx-sweep {
+    transform: skewX(12deg) translateX(130%);
+  }
+  [dir="rtl"] .group:hover .fx-sweep {
+    transform: skewX(12deg) translateX(-280%);
+  }
+
+  /* Racing underline — grows from the inline-start edge on hover */
+  .fx-underline {
+    position: relative;
+  }
+  .fx-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    height: 2px;
+    width: 100%;
+    background: rgb(var(--c-brand));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 260ms ease-out;
+  }
+  [dir="rtl"] .fx-underline::after {
+    right: 0;
+    left: auto;
+    transform-origin: right;
+  }
+  .fx-underline:hover::after {
+    transform: scaleX(1);
+  }
+
+  /* Dashed road line drifting along a panel's top edge on hover */
+  .fx-road-top {
+    position: relative;
+  }
+  .fx-road-top::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    opacity: 0;
+    background-image: repeating-linear-gradient(
+      to right,
+      rgb(var(--c-brand) / 0.7) 0,
+      rgb(var(--c-brand) / 0.7) 10px,
+      transparent 10px,
+      transparent 18px
+    );
+    transition: opacity 200ms ease-out;
+  }
+  .fx-road-top:hover::before {
+    opacity: 1;
+    animation: roadDash 700ms linear infinite;
+  }
+
+  /* Car body drop-shadow — softer in light mode so it doesn't smudge the page */
+  .hero-car-shadow {
+    filter: drop-shadow(0 20px 52px rgba(225, 29, 42, 0.36));
+  }
+  html[data-theme="light"] .hero-car-shadow {
+    filter: drop-shadow(0 16px 36px rgba(225, 29, 42, 0.22));
+  }
+}
+
+/* Respect the OS-level reduced-motion preference site-wide */
+@media (prefers-reduced-motion: reduce) {
+  .particle,
+  .fx-sweep,
+  .fx-road-top::before,
+  .animate-marquee,
+  .animate-floaty,
+  .animate-spin-slow,
+  .animate-pulse-glow,
+  .animate-beam-flicker {
+    animation: none !important;
+    transition: none !important;
   }
 }

@@ -1,0 +1,123 @@
+-- Auto Style — Enable/disable delivery per wilaya
+
+ALTER TABLE delivery_prices
+  ADD COLUMN IF NOT EXISTS active boolean NOT NULL DEFAULT true;
+
+-- Block orders to a wilaya that's been temporarily disabled (server-side, not just UI)
+CREATE OR REPLACE FUNCTION place_order(
+  items jsonb,
+  customer jsonb
+)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_order_id      uuid;
+  v_order_number  text;
+  v_subtotal      numeric := 0;
+  v_shipping      numeric := 400;
+  v_delivery_type text;
+  v_total         numeric;
+  v_item          jsonb;
+  v_product       record;
+  v_dp            record;
+BEGIN
+  v_delivery_type := COALESCE(customer->>'delivery_type', 'home');
+  v_order_number  := 'AS-' || to_char(now(), 'YYYYMMDD') || '-' || upper(substr(gen_random_uuid()::text, 1, 5));
+
+  -- Compute subtotal using server-side prices
+  FOR v_item IN SELECT * FROM jsonb_array_elements(items)
+  LOOP
+    SELECT id, price, stock, name_fr, name_ar
+    INTO v_product
+    FROM products
+    WHERE id = (v_item->>'product_id')::uuid
+      AND status = 'active';
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Product not found: %', v_item->>'product_id';
+    END IF;
+
+    v_subtotal := v_subtotal + v_product.price * (v_item->>'quantity')::int;
+  END LOOP;
+
+  -- Lookup wilaya delivery price
+  SELECT home_price, office_price, active
+  INTO v_dp
+  FROM delivery_prices
+  WHERE wilaya = customer->>'wilaya';
+
+  IF FOUND THEN
+    IF NOT v_dp.active THEN
+      RAISE EXCEPTION 'Delivery is currently unavailable for this wilaya: %', customer->>'wilaya';
+    END IF;
+    IF v_delivery_type = 'office' THEN
+      v_shipping := v_dp.office_price;
+    ELSE
+      v_shipping := v_dp.home_price;
+    END IF;
+  ELSE
+    -- Fallback to store_settings
+    SELECT shipping_fee INTO v_shipping FROM store_settings WHERE id = 1;
+  END IF;
+
+  v_total := v_subtotal + v_shipping;
+
+  -- Insert order
+  INSERT INTO orders (
+    order_number, customer_name, customer_phone,
+    wilaya, city, address, notes,
+    subtotal, shipping, total,
+    status, language, delivery_type
+  ) VALUES (
+    v_order_number,
+    customer->>'customer_name',
+    customer->>'customer_phone',
+    customer->>'wilaya',
+    customer->>'city',
+    customer->>'address',
+    customer->>'notes',
+    v_subtotal, v_shipping, v_total,
+    'pending',
+    COALESCE(customer->>'language', 'fr'),
+    v_delivery_type
+  )
+  RETURNING id INTO v_order_id;
+
+  -- Insert order items with server-side prices
+  FOR v_item IN SELECT * FROM jsonb_array_elements(items)
+  LOOP
+    SELECT id, price, name_fr, name_ar
+    INTO v_product
+    FROM products
+    WHERE id = (v_item->>'product_id')::uuid;
+
+    INSERT INTO order_items (
+      order_id, product_id,
+      name_fr, name_ar,
+      price, quantity,
+      color, size, image_url
+    ) VALUES (
+      v_order_id,
+      v_product.id,
+      v_product.name_fr,
+      v_product.name_ar,
+      v_product.price,
+      (v_item->>'quantity')::int,
+      v_item->>'color',
+      v_item->>'size',
+      v_item->>'image_url'
+    );
+
+    UPDATE products
+    SET stock = GREATEST(0, stock - (v_item->>'quantity')::int)
+    WHERE id = v_product.id;
+  END LOOP;
+
+  RETURN v_order_number;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION place_order(jsonb, jsonb) TO anon;

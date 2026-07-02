@@ -44,7 +44,7 @@ export function Header() {
               key={l.to}
               to={l.to}
               className={cn(
-                "text-[10px] uppercase tracking-widest font-mono transition-colors",
+                "fx-underline text-[10px] uppercase tracking-widest font-mono transition-colors",
                 location.pathname === l.to ? "text-brand" : "text-muted hover:text-ink"
               )}
             >
