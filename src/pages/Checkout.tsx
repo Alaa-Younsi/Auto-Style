@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { BentoPanel } from "@/components/ui/BentoPanel";
 import { WILAYAS } from "@/i18n/wilayas";
 import { cn } from "@/lib/utils";
+import { orderErrorKey } from "@/lib/orderErrors";
 import type { TranslationKey } from "@/i18n/translations";
 
 function buildSchema(t: (k: TranslationKey) => string) {
@@ -135,7 +136,7 @@ export function Checkout() {
     });
 
     if (error || !data) {
-      alert("Une erreur est survenue. Veuillez réessayer.");
+      alert(t(orderErrorKey(error?.message)));
       return;
     }
 

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import type { Order, OrderWithItems, OrderStatus } from "@/types/db";
+import type { Order, OrderWithItems, OrderStatus, GuestOrder } from "@/types/db";
 
 export function useOrders() {
   return useQuery({
@@ -36,13 +36,11 @@ export function useOrderByNumber(orderNumber: string) {
   return useQuery({
     queryKey: ["order-number", orderNumber],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, order_items(*)")
-        .eq("order_number", orderNumber)
-        .single();
+      const { data, error } = await supabase.rpc("get_order_by_number", {
+        p_order_number: orderNumber,
+      });
       if (error) throw error;
-      return data as OrderWithItems;
+      return (data ?? null) as GuestOrder | null;
     },
     enabled: !!orderNumber,
   });

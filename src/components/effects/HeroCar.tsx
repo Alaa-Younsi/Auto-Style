@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 
 /* ─── HERO CAR SVG ─────────────────────────────────────────────────────────
    Theme-aware: body/arch gradients and wheel fills read from the --c-car-*
-   tokens (graphite in light mode, near-black in dark mode) so the car never
-   turns into a flat black silhouette on a light background. Specular
+   tokens (graphite in light mode, white/silver in dark mode) so the car never
+   turns into a flat black silhouette against either background. Specular
    highlights stay literal white — gloss reads the same in both themes.
 ────────────────────────────────────────────────────────────────────────── */
 

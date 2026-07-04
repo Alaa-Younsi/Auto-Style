@@ -15,9 +15,9 @@ html[data-theme="dark"] {
   --c-brand: 225 29 42;
   --c-track: 30 30 38;
   --c-track-2: 15 15 20;
-  --c-car-hi: 56 56 62;
-  --c-car-mid: 19 19 22;
-  --c-car-lo: 12 12 14;
+  --c-car-hi: 238 238 242;
+  --c-car-mid: 205 205 212;
+  --c-car-lo: 150 150 160;
 }
 
 html[data-theme="light"] {

@@ -76,6 +76,11 @@ const translations = {
     checkout_delivery_home: "Livraison à domicile",
     checkout_delivery_office: "Retrait au bureau",
     checkout_shipping_select_wilaya: "Sélectionnez une wilaya",
+    checkout_error_generic: "Une erreur est survenue. Veuillez réessayer.",
+    checkout_error_stock: "Stock insuffisant pour un article de votre panier. Veuillez ajuster la quantité.",
+    checkout_error_wilaya_disabled: "La livraison est momentanément indisponible pour cette wilaya. Merci d'en choisir une autre.",
+    checkout_error_product_unavailable: "Un article de votre panier n'est plus disponible. Veuillez le retirer pour continuer.",
+    checkout_error_cart_empty: "Votre panier est vide.",
 
     /* ── Validation ── */
     val_required: "Ce champ est requis",
@@ -246,6 +251,11 @@ const translations = {
     checkout_delivery_home: "توصيل للمنزل",
     checkout_delivery_office: "استلام من مكتب التوصيل",
     checkout_shipping_select_wilaya: "اختر الولاية أولاً",
+    checkout_error_generic: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    checkout_error_stock: "الكمية المتوفرة غير كافية لأحد المنتجات في سلتك. يرجى تعديل الكمية.",
+    checkout_error_wilaya_disabled: "التوصيل غير متوفر حالياً لهذه الولاية. يرجى اختيار ولاية أخرى.",
+    checkout_error_product_unavailable: "أحد المنتجات في سلتك لم يعد متوفراً. يرجى إزالته للمتابعة.",
+    checkout_error_cart_empty: "سلتك فارغة.",
 
     /* ── Validation ── */
     val_required: "هذا الحقل مطلوب",

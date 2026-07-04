@@ -93,6 +93,23 @@ export interface OrderWithItems extends Order {
   order_items: OrderItem[];
 }
 
+/** Shape returned by the `get_order_by_number` RPC — the guest-facing
+ * subset of an order (no phone/address/notes), keyed to a known order_number. */
+export interface GuestOrder {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  wilaya: string;
+  city: string;
+  delivery_type: DeliveryType;
+  subtotal: number;
+  shipping: number;
+  total: number;
+  status: OrderStatus;
+  created_at: string;
+  order_items: Pick<OrderItem, "id" | "name_fr" | "name_ar" | "price" | "quantity" | "color" | "size" | "image_url">[];
+}
+
 export interface StoreSettings {
   id: number;
   shipping_fee: number;

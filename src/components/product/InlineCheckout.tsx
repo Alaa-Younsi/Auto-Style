@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { BentoPanel } from "@/components/ui/BentoPanel";
 import { WILAYAS } from "@/i18n/wilayas";
 import { cn } from "@/lib/utils";
+import { orderErrorKey } from "@/lib/orderErrors";
 import type { TranslationKey } from "@/i18n/translations";
 
 interface InlineCheckoutProps {
@@ -78,6 +79,21 @@ export function InlineCheckout({
   const selectedWilaya = watch("wilaya");
   const deliveryType = watch("delivery_type");
 
+  const { data: activeWilayas } = useQuery({
+    queryKey: ["active-wilayas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("delivery_prices")
+        .select("wilaya")
+        .eq("active", true);
+      if (error) throw error;
+      return new Set((data ?? []).map((r) => r.wilaya));
+    },
+  });
+
+  const wilayaOptions = (activeWilayas ? WILAYAS.filter((w) => activeWilayas.has(w)) : WILAYAS)
+    .map((w) => ({ value: w, label: w }));
+
   const { data: deliveryPrice } = useQuery({
     queryKey: ["delivery-price", selectedWilaya],
     queryFn: async () => {
@@ -131,7 +147,7 @@ export function InlineCheckout({
     });
 
     if (error || !data) {
-      alert("Une erreur est survenue. Veuillez réessayer.");
+      alert(t(orderErrorKey(error?.message)));
       return;
     }
 
@@ -180,7 +196,7 @@ export function InlineCheckout({
             <Select
               label={t("checkout_wilaya")}
               placeholder={t("checkout_wilaya_placeholder")}
-              options={WILAYAS.map((w) => ({ value: w, label: w }))}
+              options={wilayaOptions}
               error={errors.wilaya?.message}
               {...register("wilaya")}
             />
