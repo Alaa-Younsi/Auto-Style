@@ -60,7 +60,7 @@ export function AdminOrderDetail() {
               { label: "Téléphone", value: order.customer_phone },
               { label: t("admin_wilaya"), value: order.wilaya },
               { label: t("checkout_mairie"), value: order.city },
-              { label: t("checkout_address"), value: order.address },
+              ...(order.address ? [{ label: t("checkout_address"), value: order.address }] : []),
               ...(order.notes ? [{ label: t("checkout_notes"), value: order.notes }] : []),
             ].map(({ label, value }) => (
               <div key={label} className="flex gap-2">

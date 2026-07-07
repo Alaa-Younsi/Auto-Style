@@ -120,8 +120,8 @@ export function AdminDeliveryPrices() {
       </div>
 
       <BentoPanel className="overflow-hidden">
-        {/* Header */}
-        <div className="grid grid-cols-[1fr_140px_140px_110px_80px] gap-2 px-4 py-3 border-b border-line/40 bg-panel-2">
+        {/* Header (desktop only) */}
+        <div className="hidden sm:grid grid-cols-[1fr_140px_140px_110px_80px] gap-2 px-4 py-3 border-b border-line/40 bg-panel-2">
           <span className="text-[10px] font-mono uppercase tracking-widest text-muted">Wilaya</span>
           <span className="text-[10px] font-mono uppercase tracking-widest text-muted">{t("admin_home_price")}</span>
           <span className="text-[10px] font-mono uppercase tracking-widest text-muted">{t("admin_office_price")}</span>
@@ -143,59 +143,103 @@ export function AdminDeliveryPrices() {
               const isDirty = !!edits[wilaya];
               const isActive = row.active;
 
-              return (
-                <div
-                  key={wilaya}
+              const saveButton = isSaved ? (
+                <CheckCircle2 size={16} className="text-brand" />
+              ) : (
+                <button
+                  onClick={() => mutation.mutate(row)}
+                  disabled={!isDirty || mutation.isPending}
+                  className="text-[10px] font-mono text-muted hover:text-brand disabled:opacity-30 transition-colors uppercase tracking-wider"
+                >
+                  {t("admin_save")}
+                </button>
+              );
+
+              const activeToggle = (
+                <button
+                  onClick={() => toggleActive.mutate(row)}
+                  disabled={toggleActive.isPending}
                   className={cn(
-                    "grid grid-cols-[1fr_140px_140px_110px_80px] gap-2 items-center px-4 py-2.5 hover:bg-line/10 transition-colors",
-                    !isActive && "opacity-50"
+                    "text-[10px] font-mono uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors disabled:opacity-40",
+                    isActive
+                      ? "border-brand/30 text-brand hover:bg-brand hover:text-ink"
+                      : "border-line text-muted hover:border-brand/40 hover:text-brand"
                   )}
                 >
-                  <span className="text-xs font-mono text-ink/80 truncate">{wilaya}</span>
+                  {isActive ? t("admin_wilaya_disable") : t("admin_wilaya_enable")}
+                </button>
+              );
 
-                  <input
-                    type="number"
-                    min={0}
-                    step={50}
-                    value={getVal(row, "home_price")}
-                    onChange={(e) => setVal(wilaya, "home_price", e.target.value)}
-                    className="w-full bg-panel-2 border border-line rounded px-2 py-1.5 text-xs font-mono text-ink focus:outline-none focus:border-muted transition-colors"
-                  />
-
-                  <input
-                    type="number"
-                    min={0}
-                    step={50}
-                    value={getVal(row, "office_price")}
-                    onChange={(e) => setVal(wilaya, "office_price", e.target.value)}
-                    className="w-full bg-panel-2 border border-line rounded px-2 py-1.5 text-xs font-mono text-ink focus:outline-none focus:border-muted transition-colors"
-                  />
-
-                  <button
-                    onClick={() => toggleActive.mutate(row)}
-                    disabled={toggleActive.isPending}
+              return (
+                <div key={wilaya}>
+                  {/* Mobile: stacked card so the wilaya name always stays visible */}
+                  <div
                     className={cn(
-                      "text-[10px] font-mono uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors disabled:opacity-40",
-                      isActive
-                        ? "border-brand/30 text-brand hover:bg-brand hover:text-ink"
-                        : "border-line text-muted hover:border-brand/40 hover:text-brand"
+                      "sm:hidden flex flex-col gap-2.5 px-4 py-3",
+                      !isActive && "opacity-50"
                     )}
                   >
-                    {isActive ? t("admin_wilaya_disable") : t("admin_wilaya_enable")}
-                  </button>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-mono font-semibold text-ink">{wilaya}</span>
+                      {activeToggle}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-mono uppercase tracking-widest text-muted">{t("admin_home_price")}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={50}
+                          value={getVal(row, "home_price")}
+                          onChange={(e) => setVal(wilaya, "home_price", e.target.value)}
+                          className="w-full bg-panel-2 border border-line rounded px-2 py-1.5 text-xs font-mono text-ink focus:outline-none focus:border-muted transition-colors"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-mono uppercase tracking-widest text-muted">{t("admin_office_price")}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={50}
+                          value={getVal(row, "office_price")}
+                          onChange={(e) => setVal(wilaya, "office_price", e.target.value)}
+                          className="w-full bg-panel-2 border border-line rounded px-2 py-1.5 text-xs font-mono text-ink focus:outline-none focus:border-muted transition-colors"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex justify-end">{saveButton}</div>
+                  </div>
 
-                  <div className="flex justify-center">
-                    {isSaved ? (
-                      <CheckCircle2 size={16} className="text-brand" />
-                    ) : (
-                      <button
-                        onClick={() => mutation.mutate(row)}
-                        disabled={!isDirty || mutation.isPending}
-                        className="text-[10px] font-mono text-muted hover:text-brand disabled:opacity-30 transition-colors uppercase tracking-wider"
-                      >
-                        {t("admin_save")}
-                      </button>
+                  {/* Desktop: single-row grid */}
+                  <div
+                    className={cn(
+                      "hidden sm:grid grid-cols-[1fr_140px_140px_110px_80px] gap-2 items-center px-4 py-2.5 hover:bg-line/10 transition-colors",
+                      !isActive && "opacity-50"
                     )}
+                  >
+                    <span className="text-xs font-mono text-ink/80 truncate">{wilaya}</span>
+
+                    <input
+                      type="number"
+                      min={0}
+                      step={50}
+                      value={getVal(row, "home_price")}
+                      onChange={(e) => setVal(wilaya, "home_price", e.target.value)}
+                      className="w-full bg-panel-2 border border-line rounded px-2 py-1.5 text-xs font-mono text-ink focus:outline-none focus:border-muted transition-colors"
+                    />
+
+                    <input
+                      type="number"
+                      min={0}
+                      step={50}
+                      value={getVal(row, "office_price")}
+                      onChange={(e) => setVal(wilaya, "office_price", e.target.value)}
+                      className="w-full bg-panel-2 border border-line rounded px-2 py-1.5 text-xs font-mono text-ink focus:outline-none focus:border-muted transition-colors"
+                    />
+
+                    {activeToggle}
+
+                    <div className="flex justify-center">{saveButton}</div>
                   </div>
                 </div>
               );

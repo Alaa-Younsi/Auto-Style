@@ -86,7 +86,6 @@ const translations = {
     val_required: "Ce champ est requis",
     val_phone: "Numéro de téléphone invalide",
     val_name_min: "Minimum 3 caractères",
-    val_address_min: "Minimum 10 caractères",
 
     /* ── Order Confirmation ── */
     order_confirmed_title: "COMMANDE CONFIRMÉE",
@@ -261,7 +260,6 @@ const translations = {
     val_required: "هذا الحقل مطلوب",
     val_phone: "رقم هاتف غير صالح",
     val_name_min: "3 أحرف على الأقل",
-    val_address_min: "10 أحرف على الأقل",
 
     /* ── Order Confirmation ── */
     order_confirmed_title: "تم تأكيد طلبك",

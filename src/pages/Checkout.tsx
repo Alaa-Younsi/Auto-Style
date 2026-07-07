@@ -26,7 +26,6 @@ function buildSchema(t: (k: TranslationKey) => string) {
       .regex(/^(0|\+213)[5-7]\d{8}$/, t("val_phone")),
     wilaya: z.string().min(1, t("val_required")),
     mairie: z.string().min(2, t("val_required")),
-    address: z.string().min(10, t("val_address_min")),
     delivery_type: z.enum(["home", "office"]),
     notes: z.string().optional(),
   });
@@ -37,7 +36,6 @@ type FormValues = {
   customer_phone: string;
   wilaya: string;
   mairie: string;
-  address: string;
   delivery_type: "home" | "office";
   notes?: string;
 };
@@ -122,7 +120,6 @@ export function Checkout() {
       customer_phone: values.customer_phone,
       wilaya: values.wilaya,
       city: values.mairie,
-      address: values.address,
       delivery_type: values.delivery_type,
       notes: values.notes ?? null,
       language: lang,
@@ -187,12 +184,6 @@ export function Checkout() {
                 placeholder={t("checkout_mairie_placeholder")}
                 error={errors.mairie?.message}
                 {...register("mairie")}
-              />
-              <Input
-                label={t("checkout_address")}
-                placeholder="Adresse complète"
-                error={errors.address?.message}
-                {...register("address")}
               />
 
               {/* Delivery type */}

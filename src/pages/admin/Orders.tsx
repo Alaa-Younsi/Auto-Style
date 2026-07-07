@@ -28,7 +28,7 @@ function exportOrders(orders: Order[]) {
     o.customer_phone,
     o.wilaya,
     o.city,
-    o.address,
+    o.address ?? "",
     o.notes ?? "",
     o.subtotal,
     o.shipping,

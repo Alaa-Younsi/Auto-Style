@@ -65,7 +65,7 @@ export interface Order {
   customer_phone: string;
   wilaya: string;
   city: string;
-  address: string;
+  address: string | null;
   notes: string | null;
   subtotal: number;
   shipping: number;
