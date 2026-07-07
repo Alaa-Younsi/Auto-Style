@@ -52,9 +52,12 @@ function Wheel({ cx, cy, r, spin }: { cx: number; cy: number; r: number; spin: b
 interface HeroCarProps {
   /** Disables the reflection sweep, headlight flicker and wheel spin — desktop + motion-ok only */
   reducedMotion?: boolean;
+  /** Crops the viewBox to the car itself instead of the full illustration canvas — trims the empty
+   *  space above the car and recenters it horizontally. Mobile only; desktop keeps the full canvas. */
+  compact?: boolean;
 }
 
-export function HeroCar({ reducedMotion = false }: HeroCarProps) {
+export function HeroCar({ reducedMotion = false, compact = false }: HeroCarProps) {
   const W = 960, H = 420;
   const gY = 374;
   const fwR = 64, fwX = 222, fwY = gY - fwR;   // front wheel cy=310
@@ -85,8 +88,14 @@ export function HeroCar({ reducedMotion = false }: HeroCarProps) {
     ${archHole(rwX)}
   `;
 
+  // Car body/wheels occupy roughly x:[84,770] y:[126,393] of the 960x420 canvas — the rest
+  // is empty margin reserved for desktop layout (glow, floating cards). On mobile that margin
+  // just reads as dead space above the car, and the car's own weight sits left of center, so
+  // the compact viewBox trims the top margin and re-centers on the car's actual content.
+  const viewBox = compact ? `-53 95 ${W} 325` : `0 0 ${W} ${H}`;
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} fill="none" className="w-full h-full hero-car-shadow">
+    <svg viewBox={viewBox} fill="none" className="w-full h-full hero-car-shadow">
       <defs>
         <linearGradient id="bdG" x1="4%" y1="0%" x2="4%" y2="100%">
           <stop offset="0%" className="text-car-hi" style={{ stopColor: "currentColor" }} />

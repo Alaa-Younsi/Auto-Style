@@ -8,7 +8,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "sitemap": "bun run scripts/generate-sitemap.mjs",
+    "prebuild": "bun run sitemap"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

@@ -7,10 +7,11 @@ import {
   useInView,
   useMotionValue,
 } from "framer-motion";
-import { ArrowRight, Star, ChevronRight } from "lucide-react";
+import { ArrowRight, Star, ChevronRight, BadgeCheck, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useLang } from "@/i18n/LanguageProvider";
+import { useSeo } from "@/hooks/useSeo";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { Button } from "@/components/ui/Button";
@@ -219,6 +220,16 @@ function SectionHeader({ tag, title, subtitle }: { tag: string; title: string; s
 /* ─── MAIN PAGE ───────────────────────────────────────────────────────────── */
 export function Landing() {
   const { t, lang } = useLang();
+
+  useSeo({
+    title: lang === "ar"
+      ? "أوتو ستايل — إكسسوارات سيارات فاخرة في الجزائر"
+      : "Auto Style — Accessoires Automobiles Premium en Algérie",
+    description: lang === "ar"
+      ? "أوتو ستايل — إكسسوارات سيارات فاخرة. توصيل لجميع ولايات الجزائر الـ69، الدفع عند الاستلام."
+      : "Auto Style — Accessoires automobiles premium. Livraison dans les 69 wilayas d'Algérie, paiement à la livraison sous 24-48H.",
+  });
+
   const { data: featuredProducts } = useProducts({ featured: true, limit: 4 });
   const { data: categoriesData } = useCategories();
   const heroRef = useRef<HTMLDivElement>(null);
@@ -508,34 +519,19 @@ export function Landing() {
             >
               {[
                 {
-                  icon: (
-                    <svg viewBox="0 0 32 32" className="w-7 h-7 text-yellow-400" fill="currentColor">
-                      <path d="M16 2l3.6 7.4 8.1 1.2-5.9 5.7 1.4 8.1L16 20.8l-7.2 3.6 1.4-8.1L4.3 10.6l8.1-1.2L16 2z"/>
-                    </svg>
-                  ),
+                  icon: <Star className="w-6 h-6" fill="currentColor" strokeWidth={1.5} />,
                   label: lang === "ar" ? "4.9 تقييم" : "4.9 Étoiles",
                   sub: lang === "ar" ? "تقييم العملاء" : "Avis clients",
                   accent: "text-yellow-400",
                 },
                 {
-                  icon: (
-                    <svg viewBox="0 0 32 32" className="w-7 h-7 text-brand" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="16" cy="16" r="13"/>
-                      <path d="M10 16.5l4 4 8-8"/>
-                    </svg>
-                  ),
+                  icon: <BadgeCheck className="w-6 h-6" strokeWidth={2} />,
                   label: lang === "ar" ? "+1 200 عميل" : "+1 200 Clients",
                   sub: lang === "ar" ? "عملاء راضون" : "Satisfaits",
                   accent: "text-brand",
                 },
                 {
-                  icon: (
-                    <svg viewBox="0 0 32 32" className="w-7 h-7 text-ink/60" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="6" y="14" width="20" height="14" rx="3"/>
-                      <path d="M10 14v-3a6 6 0 0 1 12 0v3"/>
-                      <circle cx="16" cy="21" r="2" fill="currentColor" stroke="none"/>
-                    </svg>
-                  ),
+                  icon: <ShieldCheck className="w-6 h-6" strokeWidth={2} />,
                   label: lang === "ar" ? "دفع آمن" : "100% Sécurisé",
                   sub: lang === "ar" ? "الدفع عند الاستلام" : "Paiement livraison",
                   accent: "text-ink/60",
@@ -571,7 +567,7 @@ export function Landing() {
               transition={isMobile ? {} : { duration: 5, repeat: Infinity, ease: "easeInOut" }}
               className="relative w-full"
             >
-              <HeroCar reducedMotion={prefersReducedMotion || isMobile} />
+              <HeroCar reducedMotion={prefersReducedMotion || isMobile} compact={isMobile} />
             </motion.div>
 
             {/* Floating product cards — 3D tilt on desktop, chip row on mobile */}

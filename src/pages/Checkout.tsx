@@ -16,6 +16,7 @@ import { BentoPanel } from "@/components/ui/BentoPanel";
 import { WILAYAS } from "@/i18n/wilayas";
 import { cn } from "@/lib/utils";
 import { orderErrorKey } from "@/lib/orderErrors";
+import { useHoneypot } from "@/hooks/useHoneypot";
 import type { TranslationKey } from "@/i18n/translations";
 
 function buildSchema(t: (k: TranslationKey) => string) {
@@ -28,6 +29,7 @@ function buildSchema(t: (k: TranslationKey) => string) {
     mairie: z.string().min(2, t("val_required")),
     delivery_type: z.enum(["home", "office"]),
     notes: z.string().optional(),
+    hp_website: z.string().optional(),
   });
 }
 
@@ -38,12 +40,14 @@ type FormValues = {
   mairie: string;
   delivery_type: "home" | "office";
   notes?: string;
+  hp_website?: string;
 };
 
 export function Checkout() {
   const { t, lang } = useLang();
   const navigate = useNavigate();
   const { items, subtotal, clearCart } = useCartStore();
+  const { isSpam } = useHoneypot();
 
   const {
     register,
@@ -104,6 +108,8 @@ export function Checkout() {
   }
 
   const onSubmit = async (values: FormValues) => {
+    if (isSpam(values.hp_website)) return;
+
     const orderItems = items.map((item) => ({
       product_id: item.productId,
       name_fr: item.name_fr,
@@ -159,6 +165,17 @@ export function Checkout() {
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
             <BentoPanel className="p-6 flex flex-col gap-5">
+              {/* Honeypot — hidden from real users, catches basic bots */}
+              <input
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="absolute w-px h-px opacity-0 overflow-hidden -z-10"
+                style={{ left: "-9999px" }}
+                {...register("hp_website")}
+              />
+
               <Input
                 label={t("checkout_customer_name")}
                 placeholder="Nom Prénom"

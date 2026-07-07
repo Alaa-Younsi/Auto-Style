@@ -4,6 +4,7 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useLang } from "@/i18n/LanguageProvider";
+import { useSeo } from "@/hooks/useSeo";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,14 @@ type SortOption = "newest" | "price_asc" | "price_desc" | "featured";
 
 export function Shop() {
   const { t, lang, tf } = useLang();
+
+  useSeo({
+    title: lang === "ar" ? "المتجر — أوتو ستايل" : "Boutique — Auto Style",
+    description: lang === "ar"
+      ? "تصفح جميع إكسسوارات السيارات في أوتو ستايل. توصيل لجميع ولايات الجزائر الـ69."
+      : "Découvrez tous les accessoires automobiles Auto Style. Livraison dans les 69 wilayas d'Algérie.",
+  });
+
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [sort, setSort] = useState<SortOption>("newest");

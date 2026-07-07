@@ -112,10 +112,19 @@ export function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-line/40 py-5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-[10px] text-muted/60 font-mono uppercase tracking-widest">
-            © 2024 Auto Style · Algérie
+            © 2026 Auto Style · Algérie
           </span>
+          <a
+            href="https://alaayounsi.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] font-mono text-muted/50 hover:text-brand uppercase tracking-widest transition-colors order-last sm:order-none"
+          >
+            {lang === "ar" ? "الموقع من إنشاء " : "Website created by "}
+            <span className="text-muted/80 hover:text-brand">Alaa Younsi</span>
+          </a>
           <div className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
             <span className="text-[10px] font-mono text-muted/50 uppercase tracking-widest">

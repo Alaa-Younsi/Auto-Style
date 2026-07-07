@@ -35,11 +35,6 @@ export function CircleButton({
   const spokeW = size * 0.05;
   const spokes = [90, 210, 330];
 
-  const textR = outerR + 18;
-  const textCircumference = 2 * Math.PI * textR;
-  const ringText = `${label} · ${label} · ${label} · `;
-  const letterSpacing = textCircumference / ringText.length - 7.5;
-  const ringPathId = `rp-${size}`;
   const glowId = `glow-${size}`;
 
   const defaultBadgeLabel = lang === "ar" ? "أضف إلى السلة" : "Ajouter au panier";
@@ -116,10 +111,6 @@ export function CircleButton({
           overflow="visible"
         >
           <defs>
-            <path
-              id={ringPathId}
-              d={`M ${cx},${cx} m -${textR},0 a ${textR},${textR} 0 1,1 ${textR * 2},0 a ${textR},${textR} 0 1,1 -${textR * 2},0`}
-            />
             <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
               <feGaussianBlur stdDeviation="5" result="blur" />
               <feMerge>
@@ -172,14 +163,6 @@ export function CircleButton({
             stroke="rgb(var(--c-ink))" strokeWidth={hubR * 0.14} strokeLinecap="round" opacity="0.9" />
           <line x1={cx} y1={cx - hubR * 0.22} x2={cx} y2={cx + hubR * 0.22}
             stroke="rgb(var(--c-ink))" strokeWidth={hubR * 0.14} strokeLinecap="round" opacity="0.9" />
-
-          <g>
-            <text fill="#E11D2A" fontFamily="'IBM Plex Mono', monospace" fontSize="7.5" letterSpacing={letterSpacing}>
-              <textPath href={`#${ringPathId}`}>{ringText}</textPath>
-            </text>
-            <animateTransform attributeName="transform" type="rotate"
-              from={`0 ${cx} ${cx}`} to={`360 ${cx} ${cx}`} dur="14s" repeatCount="indefinite" />
-          </g>
         </svg>
       </button>
     </div>

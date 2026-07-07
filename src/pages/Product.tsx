@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, Minus, Plus } from "lucide-react";
 import { useProduct, useProducts } from "@/hooks/useProducts";
 import { useLang } from "@/i18n/LanguageProvider";
+import { useSeo } from "@/hooks/useSeo";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/format";
 import { CircleButton } from "@/components/ui/CircleButton";
@@ -36,6 +37,15 @@ export function Product() {
   const relatedProducts = useMemo(() => {
     return (relatedFromDB ?? []).filter((p) => p.id !== (displayProduct?.id ?? "")).slice(0, 4);
   }, [relatedFromDB, displayProduct]);
+
+  const seoName = displayProduct ? (lang === "ar" ? displayProduct.name_ar : displayProduct.name_fr) : "";
+  const seoDescription = displayProduct
+    ? (lang === "ar" ? displayProduct.description_ar : displayProduct.description_fr) ?? undefined
+    : undefined;
+  useSeo({
+    title: displayProduct ? `${seoName} — Auto Style` : "Auto Style",
+    description: seoDescription,
+  });
 
   if (isLoading) {
     return (
