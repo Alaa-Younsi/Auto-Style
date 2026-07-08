@@ -108,7 +108,7 @@ export interface GuestOrder {
   total: number;
   status: OrderStatus;
   created_at: string;
-  order_items: Pick<OrderItem, "id" | "name_fr" | "name_ar" | "price" | "quantity" | "color" | "size" | "image_url">[];
+  order_items: Pick<OrderItem, "id" | "product_id" | "name_fr" | "name_ar" | "price" | "quantity" | "color" | "size" | "image_url">[];
 }
 
 export interface StoreSettings {

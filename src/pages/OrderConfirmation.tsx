@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -7,11 +8,41 @@ import { formatPrice } from "@/lib/format";
 import { BentoPanel } from "@/components/ui/BentoPanel";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { trackPurchase } from "@/lib/pixel";
+
+// sessionStorage key prefix guarding against a duplicate Purchase fire if the
+// customer refreshes or revisits this confirmation page for the same order.
+const PURCHASE_TRACKED_KEY_PREFIX = "fb_purchase_tracked_";
 
 export function OrderConfirmation() {
   const { orderNumber = "" } = useParams();
   const { t, lang } = useLang();
   const { data: order } = useOrderByNumber(orderNumber);
+
+  const trackedOrderId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!order) return;
+    // Guards against StrictMode's dev-only double-invoke of this effect.
+    if (trackedOrderId.current === order.id) return;
+    trackedOrderId.current = order.id;
+
+    const storageKey = `${PURCHASE_TRACKED_KEY_PREFIX}${order.id}`;
+    if (sessionStorage.getItem(storageKey)) return;
+    sessionStorage.setItem(storageKey, "1");
+
+    trackPurchase(
+      {
+        content_ids: order.order_items
+          .map((i) => i.product_id)
+          .filter((id): id is string => !!id),
+        content_type: "product",
+        value: order.total,
+        currency: "DZD",
+        num_items: order.order_items.reduce((n, i) => n + i.quantity, 0),
+      },
+      order.id
+    );
+  }, [order]);
 
   return (
     <div className="min-h-screen flex items-center justify-center pt-20 pb-16 px-4">

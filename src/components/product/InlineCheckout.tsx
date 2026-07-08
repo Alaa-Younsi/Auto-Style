@@ -16,7 +16,7 @@ import { WILAYAS } from "@/i18n/wilayas";
 import { cn } from "@/lib/utils";
 import { orderErrorKey } from "@/lib/orderErrors";
 import { useHoneypot } from "@/hooks/useHoneypot";
-import { trackInitiateCheckout, trackPurchase } from "@/lib/pixel";
+import { trackInitiateCheckout } from "@/lib/pixel";
 import type { TranslationKey } from "@/i18n/translations";
 
 interface InlineCheckoutProps {
@@ -171,15 +171,6 @@ export function InlineCheckout({
       alert(t(orderErrorKey(error?.message)));
       return;
     }
-
-    trackPurchase({
-      content_ids: [productId],
-      content_name: displayName,
-      content_type: "product",
-      value: total,
-      currency: "DZD",
-      num_items: qty,
-    });
 
     navigate(`/order/${data as string}`);
   };

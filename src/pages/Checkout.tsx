@@ -18,7 +18,7 @@ import { WILAYAS } from "@/i18n/wilayas";
 import { cn } from "@/lib/utils";
 import { orderErrorKey } from "@/lib/orderErrors";
 import { useHoneypot } from "@/hooks/useHoneypot";
-import { trackInitiateCheckout, trackPurchase } from "@/lib/pixel";
+import { trackInitiateCheckout } from "@/lib/pixel";
 import type { TranslationKey } from "@/i18n/translations";
 
 function buildSchema(t: (k: TranslationKey) => string) {
@@ -159,14 +159,6 @@ export function Checkout() {
       alert(t(orderErrorKey(error?.message)));
       return;
     }
-
-    trackPurchase({
-      content_ids: items.map((i) => i.productId),
-      content_type: "product",
-      value: total,
-      currency: "DZD",
-      num_items: items.reduce((n, i) => n + i.qty, 0),
-    });
 
     clearCart();
     navigate(`/order/${data as string}`);
