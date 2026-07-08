@@ -37,6 +37,7 @@ export interface Product {
   colors: ProductColor[];
   sizes: ProductSize[];
   featured: boolean;
+  almost_sold_out: boolean;
   status: "active" | "draft";
   video_url: string | null;
   created_at: string;

@@ -10,9 +10,11 @@ import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: ProductWithImages;
+  /** Above-the-fold cards (first grid row) should load eagerly at high priority instead of lazily. */
+  priority?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, priority = false }: ProductCardProps) {
   const { lang, t } = useLang();
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -88,6 +90,9 @@ export function ProductCard({ product }: ProductCardProps) {
               <img
                 src={primaryImage}
                 alt={name}
+                loading={priority ? "eager" : "lazy"}
+                decoding="async"
+                fetchPriority={priority ? "high" : "auto"}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
             ) : (
@@ -100,6 +105,13 @@ export function ProductCard({ product }: ProductCardProps) {
             {isOnSale && (
               <span className="absolute top-3 start-3 bg-brand text-ink text-[9px] font-mono uppercase tracking-widest px-2 py-1 rounded-md">
                 {t("product_final_sale")}
+              </span>
+            )}
+
+            {/* Almost sold out badge */}
+            {product.almost_sold_out && (
+              <span className="absolute top-3 end-3 bg-amber-500 text-ink text-[9px] font-mono uppercase tracking-widest px-2 py-1 rounded-md animate-pulse">
+                {t("product_almost_sold_out")}
               </span>
             )}
 

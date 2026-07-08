@@ -731,6 +731,8 @@ export function Landing() {
                   <img
                     src={cat.image_url}
                     alt={cat.name_fr}
+                    loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-all duration-500 group-hover:scale-110"
                   />
                 )}
@@ -816,6 +818,8 @@ export function Landing() {
                       <img
                         src={review.image_url}
                         alt={review.client_name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-8 h-8 rounded-full object-cover border border-line"
                       />
                     ) : (

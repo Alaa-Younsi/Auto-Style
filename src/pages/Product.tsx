@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 export function Product() {
   const { slug = "" } = useParams();
   const { data: product, isLoading } = useProduct(slug);
-  const { lang, t, tf } = useLang();
+  const { lang, t } = useLang();
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
 
@@ -182,6 +182,9 @@ export function Product() {
                     key={primaryImg}
                     src={primaryImg}
                     alt={name}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                     className="max-h-[50vh] lg:max-h-[55vh] w-full object-contain drop-shadow-2xl"
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -193,6 +196,12 @@ export function Product() {
                 {isOnSale && (
                   <span className="absolute top-4 left-4 bg-brand text-ink text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-md">
                     {t("product_final_sale")}
+                  </span>
+                )}
+
+                {displayProduct.almost_sold_out && (
+                  <span className="absolute top-4 end-4 bg-amber-500 text-ink text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-md animate-pulse">
+                    {t("product_almost_sold_out")}
                   </span>
                 )}
 
@@ -219,7 +228,7 @@ export function Product() {
                         i === activeImg ? "border-brand" : "border-line/40 hover:border-muted/60"
                       )}
                     >
-                      <img src={img.url} alt={img.alt ?? name} className="w-full h-full object-cover" />
+                      <img src={img.url} alt={img.alt ?? name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -336,7 +345,7 @@ export function Product() {
               )}
 
               <p className={cn("text-[10px] font-mono uppercase tracking-widest", displayProduct.stock > 0 ? "text-muted/70" : "text-brand")}>
-                {displayProduct.stock > 0 ? tf("product_in_stock", displayProduct.stock) : t("product_out_of_stock")}
+                {displayProduct.stock > 0 ? t("product_in_stock_generic") : t("product_out_of_stock")}
               </p>
 
               {!canAdd && displayProduct.stock > 0 && (needsColor || needsSize) && (

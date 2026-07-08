@@ -207,7 +207,7 @@ export function Shop() {
                 show: { transition: { staggerChildren: 0.05 } },
               }}
             >
-              {filtered.map((product) => (
+              {filtered.map((product, i) => (
                 <motion.div
                   key={product.id}
                   variants={{
@@ -215,7 +215,7 @@ export function Shop() {
                     show: { opacity: 1, y: 0 },
                   }}
                 >
-                  <ProductCard product={product} />
+                  <ProductCard product={product} priority={i < 4} />
                 </motion.div>
               ))}
             </motion.div>

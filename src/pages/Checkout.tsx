@@ -330,7 +330,7 @@ export function Checkout() {
                   >
                     <div className="w-12 h-12 rounded-lg overflow-hidden bg-panel-2 flex-shrink-0">
                       {item.image && (
-                        <img src={item.image} alt="" className="w-full h-full object-cover" />
+                        <img src={item.image} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

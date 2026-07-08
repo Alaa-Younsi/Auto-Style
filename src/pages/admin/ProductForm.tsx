@@ -7,6 +7,7 @@ import { Plus, X, Upload, ArrowLeft, Video } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { uploadVideoToCloudinary } from "@/lib/cloudinary";
+import { compressImage } from "@/lib/image";
 import { useCategories } from "@/hooks/useCategories";
 import { useLang } from "@/i18n/LanguageProvider";
 import { BentoPanel } from "@/components/ui/BentoPanel";
@@ -29,6 +30,7 @@ const schema = z.object({
   stock: z.coerce.number().int().min(0),
   style_code: z.string().optional(),
   featured: z.boolean().default(false),
+  almost_sold_out: z.boolean().default(false),
   status: z.enum(["active", "draft"]).default("active"),
 });
 
@@ -54,6 +56,7 @@ export function AdminProductForm() {
   const [newVideoPreview, setNewVideoPreview] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [videoUploadPct, setVideoUploadPct] = useState(0);
+  const [compressingImages, setCompressingImages] = useState(false);
 
   const {
     register,
@@ -89,6 +92,7 @@ export function AdminProductForm() {
         stock: existingProduct.stock,
         style_code: existingProduct.style_code ?? "",
         featured: existingProduct.featured,
+        almost_sold_out: existingProduct.almost_sold_out,
         status: existingProduct.status,
       });
       setColors(existingProduct.colors ?? []);
@@ -118,6 +122,7 @@ export function AdminProductForm() {
         stock: vals.stock,
         style_code: vals.style_code || null,
         featured: vals.featured,
+        almost_sold_out: vals.almost_sold_out,
         status: vals.status,
         colors,
         sizes,
@@ -229,6 +234,10 @@ export function AdminProductForm() {
             <input type="checkbox" className="accent-brand w-4 h-4" {...register("featured")} />
             <span className="text-[10px] font-mono uppercase tracking-widest text-muted">{t("admin_featured")}</span>
           </label>
+          <label className="col-span-2 flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" className="accent-brand w-4 h-4" {...register("almost_sold_out")} />
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted">{t("admin_almost_sold_out")}</span>
+          </label>
         </BentoPanel>
 
         {/* Details FR */}
@@ -312,17 +321,29 @@ export function AdminProductForm() {
               ))}
             </div>
           )}
-          <label className={cn("flex flex-col items-center justify-center gap-2 border-2 border-dashed border-line rounded-lg p-6 cursor-pointer hover:border-muted transition-colors")}>
+          <label className={cn(
+            "flex flex-col items-center justify-center gap-2 border-2 border-dashed border-line rounded-lg p-6 transition-colors",
+            compressingImages ? "opacity-60 cursor-wait" : "cursor-pointer hover:border-muted"
+          )}>
             <Upload size={20} className="text-muted" />
-            <span className="text-[10px] font-mono text-muted uppercase tracking-wider">{t("admin_upload_images")}</span>
+            <span className="text-[10px] font-mono text-muted uppercase tracking-wider">
+              {compressingImages ? "…" : t("admin_upload_images")}
+            </span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple className="sr-only"
-              onChange={(e) => {
-                const files = Array.from(e.target.files ?? []);
-                if (!files.length) return;
-                const urls = files.map((f) => URL.createObjectURL(f));
-                setImageFiles((p) => [...p, ...files]);
-                setImagePreviews((p) => [...p, ...urls]);
+              disabled={compressingImages}
+              onChange={async (e) => {
+                const selected = Array.from(e.target.files ?? []);
+                if (!selected.length) return;
                 e.target.value = "";
+                setCompressingImages(true);
+                try {
+                  const files = await Promise.all(selected.map((f) => compressImage(f)));
+                  const urls = files.map((f) => URL.createObjectURL(f));
+                  setImageFiles((p) => [...p, ...files]);
+                  setImagePreviews((p) => [...p, ...urls]);
+                } finally {
+                  setCompressingImages(false);
+                }
               }}
             />
           </label>

@@ -29,6 +29,16 @@ export function AdminProducts() {
     },
   });
 
+  const toggleStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "active" | "draft" }) => {
+      const { error } = await supabase.from("products").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-products"] });
+    },
+  });
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
@@ -93,14 +103,25 @@ export function AdminProducts() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={cn(
-                        "text-[9px] font-mono uppercase tracking-wider px-2 py-1 rounded-md border",
-                        product.status === "active"
-                          ? "bg-brand/10 text-brand border-brand/30"
-                          : "bg-line/30 text-muted border-line"
-                      )}>
+                      <button
+                        type="button"
+                        disabled={toggleStatus.isPending && toggleStatus.variables?.id === product.id}
+                        onClick={() =>
+                          toggleStatus.mutate({
+                            id: product.id,
+                            status: product.status === "active" ? "draft" : "active",
+                          })
+                        }
+                        title={product.status === "active" ? t("admin_deactivate") : t("admin_activate")}
+                        className={cn(
+                          "text-[9px] font-mono uppercase tracking-wider px-2 py-1 rounded-md border transition-opacity hover:opacity-75 disabled:opacity-40 cursor-pointer",
+                          product.status === "active"
+                            ? "bg-brand/10 text-brand border-brand/30"
+                            : "bg-line/30 text-muted border-line"
+                        )}
+                      >
                         {product.status}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 justify-end">

@@ -361,7 +361,7 @@ export function InlineCheckout({
 
           <div className="flex items-center gap-3 mb-4">
             <div className="w-14 h-14 rounded-lg overflow-hidden bg-panel-2 flex-shrink-0">
-              {image && <img src={image} alt="" className="w-full h-full object-cover" />}
+              {image && <img src={image} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />}
             </div>
             <div className="flex-1 min-w-0">
               <p className={cn("text-xs font-mono font-bold text-ink truncate", lang === "ar" && "font-ar")}>
