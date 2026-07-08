@@ -194,7 +194,7 @@ export function Product() {
                 </AnimatePresence>
 
                 {isOnSale && (
-                  <span className="absolute top-4 left-4 bg-brand text-ink text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-md">
+                  <span className="absolute top-4 start-4 bg-brand text-ink text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-md">
                     {t("product_final_sale")}
                   </span>
                 )}
