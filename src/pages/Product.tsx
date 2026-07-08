@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, Minus, Plus } from "lucide-react";
@@ -7,6 +7,7 @@ import { useLang } from "@/i18n/LanguageProvider";
 import { useSeo } from "@/hooks/useSeo";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/format";
+import { trackViewContent, trackAddToCart } from "@/lib/pixel";
 import { CircleButton } from "@/components/ui/CircleButton";
 import { ProductCard } from "@/components/product/ProductCard";
 import { InlineCheckout } from "@/components/product/InlineCheckout";
@@ -46,6 +47,23 @@ export function Product() {
     title: displayProduct ? `${seoName} — Auto Style` : "Auto Style",
     description: seoDescription,
   });
+
+  const trackedViewContentId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!displayProduct) return;
+    // Guards against StrictMode's dev-only double-invoke of this effect; still re-fires
+    // when navigating to a different product since the component instance is reused.
+    if (trackedViewContentId.current === displayProduct.id) return;
+    trackedViewContentId.current = displayProduct.id;
+    trackViewContent({
+      content_ids: [displayProduct.id],
+      content_name: lang === "ar" ? displayProduct.name_ar : displayProduct.name_fr,
+      content_type: "product",
+      value: displayProduct.price,
+      currency: "DZD",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayProduct?.id]);
 
   if (isLoading) {
     return (
@@ -99,6 +117,13 @@ export function Product() {
       color: selectedColorLabel,
       size: selectedSize,
     }, qty);
+    trackAddToCart({
+      content_ids: [displayProduct.id],
+      content_name: name,
+      content_type: "product",
+      value: displayProduct.price * qty,
+      currency: "DZD",
+    });
     setQty(1);
     openCart();
   };

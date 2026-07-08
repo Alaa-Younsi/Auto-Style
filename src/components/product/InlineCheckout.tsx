@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +16,7 @@ import { WILAYAS } from "@/i18n/wilayas";
 import { cn } from "@/lib/utils";
 import { orderErrorKey } from "@/lib/orderErrors";
 import { useHoneypot } from "@/hooks/useHoneypot";
+import { trackInitiateCheckout, trackPurchase } from "@/lib/pixel";
 import type { TranslationKey } from "@/i18n/translations";
 
 interface InlineCheckoutProps {
@@ -116,6 +118,22 @@ export function InlineCheckout({
   const total = sub + (shipping ?? 0);
   const displayName = lang === "ar" ? name_ar : name_fr;
 
+  const trackedCheckoutId = useRef<string | null>(null);
+  useEffect(() => {
+    // Guards against StrictMode's dev-only double-invoke of this effect.
+    if (trackedCheckoutId.current === productId) return;
+    trackedCheckoutId.current = productId;
+    trackInitiateCheckout({
+      content_ids: [productId],
+      content_name: displayName,
+      content_type: "product",
+      value: sub,
+      currency: "DZD",
+      num_items: qty,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]);
+
   const onSubmit = async (values: FormValues) => {
     if (isSpam(values.hp_website)) return;
 
@@ -153,6 +171,15 @@ export function InlineCheckout({
       alert(t(orderErrorKey(error?.message)));
       return;
     }
+
+    trackPurchase({
+      content_ids: [productId],
+      content_name: displayName,
+      content_type: "product",
+      value: total,
+      currency: "DZD",
+      num_items: qty,
+    });
 
     navigate(`/order/${data as string}`);
   };

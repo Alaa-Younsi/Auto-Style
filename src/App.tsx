@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { trackPageView } from "@/lib/pixel";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { Header } from "@/components/layout/Header";
@@ -31,6 +32,27 @@ function ScrollToTop() {
   return null;
 }
 
+// The index.html Meta Pixel snippet fires the first PageView on initial load. Since this is
+// a client-side-routed SPA, subsequent navigations never reload the page, so without this the
+// Pixel would only ever see one PageView per visit. Admin routes are excluded — that's store
+// owner/staff traffic, not customer traffic ads should optimize against.
+function PixelPageView() {
+  const { pathname } = useLocation();
+  const prevPathname = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Skip the initial mount (base snippet already tracked it) and StrictMode's dev-only
+    // double-invoke of this same effect (prevPathname is already set to the current value).
+    if (prevPathname.current === pathname) return;
+    const isFirstRender = prevPathname.current === null;
+    prevPathname.current = pathname;
+    if (isFirstRender || pathname.startsWith("/admin")) return;
+    trackPageView();
+  }, [pathname]);
+
+  return null;
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -47,6 +69,7 @@ export default function App() {
       <LanguageProvider>
         <BrowserRouter>
           <ScrollToTop />
+          <PixelPageView />
           <Header />
           <CartDrawer />
 

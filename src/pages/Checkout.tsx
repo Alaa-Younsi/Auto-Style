@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +18,7 @@ import { WILAYAS } from "@/i18n/wilayas";
 import { cn } from "@/lib/utils";
 import { orderErrorKey } from "@/lib/orderErrors";
 import { useHoneypot } from "@/hooks/useHoneypot";
+import { trackInitiateCheckout, trackPurchase } from "@/lib/pixel";
 import type { TranslationKey } from "@/i18n/translations";
 
 function buildSchema(t: (k: TranslationKey) => string) {
@@ -96,6 +98,21 @@ export function Checkout() {
     : null;
   const total = sub + (shipping ?? 0);
 
+  const hasTrackedCheckout = useRef(false);
+  useEffect(() => {
+    // Guards against StrictMode's dev-only double-invoke of this effect.
+    if (hasTrackedCheckout.current || items.length === 0) return;
+    hasTrackedCheckout.current = true;
+    trackInitiateCheckout({
+      content_ids: items.map((i) => i.productId),
+      content_type: "product",
+      value: sub,
+      currency: "DZD",
+      num_items: items.reduce((n, i) => n + i.qty, 0),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 pt-20">
@@ -142,6 +159,14 @@ export function Checkout() {
       alert(t(orderErrorKey(error?.message)));
       return;
     }
+
+    trackPurchase({
+      content_ids: items.map((i) => i.productId),
+      content_type: "product",
+      value: total,
+      currency: "DZD",
+      num_items: items.reduce((n, i) => n + i.qty, 0),
+    });
 
     clearCart();
     navigate(`/order/${data as string}`);
