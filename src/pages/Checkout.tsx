@@ -17,6 +17,7 @@ import { BentoPanel } from "@/components/ui/BentoPanel";
 import { WILAYAS } from "@/i18n/wilayas";
 import { cn } from "@/lib/utils";
 import { orderErrorKey } from "@/lib/orderErrors";
+import { normalizePhone, isValidAlgerianPhone } from "@/lib/validation";
 import { useHoneypot } from "@/hooks/useHoneypot";
 import { trackInitiateCheckout } from "@/lib/pixel";
 import type { TranslationKey } from "@/i18n/translations";
@@ -26,7 +27,8 @@ function buildSchema(t: (k: TranslationKey) => string) {
     customer_name: z.string().min(3, t("val_name_min")),
     customer_phone: z
       .string()
-      .regex(/^(0|\+213)[5-7]\d{8}$/, t("val_phone")),
+      .transform(normalizePhone)
+      .refine(isValidAlgerianPhone, t("val_phone")),
     wilaya: z.string().min(1, t("val_required")),
     mairie: z.string().min(2, t("val_required")),
     delivery_type: z.enum(["home", "office"]),
@@ -148,12 +150,19 @@ export function Checkout() {
       language: lang,
     };
 
-    const { data, error } = await supabase.rpc("place_order", {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      items: orderItems as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      customer: customer as any,
-    });
+    let data: string | null = null;
+    let error: { message: string } | null = null;
+    try {
+      ({ data, error } = await supabase.rpc("place_order", {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        items: orderItems as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        customer: customer as any,
+      }));
+    } catch {
+      alert(t("checkout_error_generic"));
+      return;
+    }
 
     if (error || !data) {
       alert(t(orderErrorKey(error?.message)));

@@ -121,7 +121,7 @@ export function Product() {
       content_ids: [displayProduct.id],
       content_name: name,
       content_type: "product",
-      value: displayProduct.price * qty,
+      value: Number(displayProduct.price) * qty,
       currency: "DZD",
     });
     setQty(1);

@@ -6,7 +6,22 @@ declare global {
 
 type PixelParams = Record<string, string | number | string[] | undefined>;
 
+// Commerce events are worthless (and pollute Meta's Diagnostics) if `value` isn't
+// a real positive number — e.g. price data that hasn't loaded yet resolving to
+// undefined/NaN. Better to silently skip the event than send garbage.
+function hasValidValue(params?: PixelParams): boolean {
+  if (!params || !("value" in params)) return true;
+  const value = params.value;
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+
 function track(event: string, params?: PixelParams, eventId?: string) {
+  if (!hasValidValue(params)) {
+    if (import.meta.env.DEV) {
+      console.warn(`[pixel] Skipped "${event}" — invalid or missing value`, params);
+    }
+    return;
+  }
   if (eventId) {
     window.fbq?.("track", event, params, { eventID: eventId });
   } else {
