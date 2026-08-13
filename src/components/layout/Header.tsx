@@ -8,6 +8,8 @@ import { useCartStore } from "@/store/cart";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
+// PHONE PREVIEW — temporary recording rig, delete with the folder it points at
+import { PhonePreviewButton } from "@/devtools/phone-preview/PhonePreviewButton";
 
 export function Header() {
   const { t } = useLang();
@@ -65,6 +67,9 @@ export function Header() {
             <LayoutDashboard size={13} />
             {adminLink.label}
           </Link>
+          {/* PHONE PREVIEW — temporary recording rig. Delete this line, its
+              import, and src/devtools/phone-preview/ to remove. */}
+          <PhonePreviewButton />
           <ThemeToggle />
           <LanguageToggle />
 

@@ -23,6 +23,8 @@ import { AdminOrders } from "@/pages/admin/Orders";
 import { AdminOrderDetail } from "@/pages/admin/OrderDetail";
 import { AdminDeliveryPrices } from "@/pages/admin/DeliveryPrices";
 import { AdminReviews } from "@/pages/admin/Reviews";
+// PHONE PREVIEW — temporary recording rig, delete with the folder it points at
+import { PhonePreview } from "@/devtools/phone-preview/PhonePreview";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -58,6 +60,9 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 2,
       retry: 1,
+      // A catalogue doesn't change while the shopper tabs away, and a refetch on every
+      // focus burns their mobile data and the store's Supabase egress.
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -67,6 +72,12 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
       <LanguageProvider>
+        {/* PHONE PREVIEW — temporary recording rig. Delete this wrapper (keeping
+            its children), its import, and src/devtools/phone-preview/ to remove.
+            It sits OUTSIDE BrowserRouter on purpose: the rig replaces the whole
+            app while it is up, and inside the router it would remount on every
+            navigation. */}
+        <PhonePreview>
         <BrowserRouter>
           <ScrollToTop />
           <PixelPageView />
@@ -103,6 +114,7 @@ export default function App() {
 
           <Footer />
         </BrowserRouter>
+        </PhonePreview>{/* PHONE PREVIEW — end of temporary recording rig */}
       </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>

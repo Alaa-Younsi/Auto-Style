@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, Minus, Plus } from "lucide-react";
 import { useProduct, useProducts } from "@/hooks/useProducts";
 import { useLang } from "@/i18n/LanguageProvider";
-import { useSeo } from "@/hooks/useSeo";
+import { useSeo, SITE_URL } from "@/hooks/useSeo";
+import { useIsDesktop } from "@/hooks/useMediaFlags";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/format";
 import { trackViewContent, trackAddToCart } from "@/lib/pixel";
@@ -19,6 +20,7 @@ export function Product() {
   const { slug = "" } = useParams();
   const { data: product, isLoading } = useProduct(slug);
   const { lang, t } = useLang();
+  const isDesktop = useIsDesktop();
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
 
@@ -43,9 +45,41 @@ export function Product() {
   const seoDescription = displayProduct
     ? (lang === "ar" ? displayProduct.description_ar : displayProduct.description_fr) ?? undefined
     : undefined;
+  // Sorted independently of the gallery's active index: the share image should be the
+  // product's own first photo, not whichever thumbnail the shopper happened to click.
+  const seoImages = useMemo(
+    () =>
+      [...(displayProduct?.product_images ?? [])]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((img) => img.url),
+    [displayProduct],
+  );
   useSeo({
     title: displayProduct ? `${seoName} — Auto Style` : "Auto Style",
     description: seoDescription,
+    image: seoImages[0],
+    type: displayProduct ? "product" : "website",
+    jsonLd: displayProduct
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: seoName,
+          description: seoDescription,
+          image: seoImages,
+          sku: displayProduct.style_code ?? displayProduct.id,
+          brand: { "@type": "Brand", name: "Auto Style" },
+          offers: {
+            "@type": "Offer",
+            url: `${SITE_URL}/product/${displayProduct.slug}`,
+            priceCurrency: "DZD",
+            price: displayProduct.price,
+            availability:
+              displayProduct.stock > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+          },
+        }
+      : undefined,
   });
 
   const trackedViewContentId = useRef<string | null>(null);
@@ -132,11 +166,16 @@ export function Product() {
     document.getElementById("checkout-form")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Rendered at exactly one of the two call sites below, chosen by `isDesktop`. Doing this
+  // with `hidden lg:block`/`lg:hidden` instead would keep BOTH <video>s in the DOM, and an
+  // autoplaying video downloads even while its container is hidden — every product view
+  // pulled the whole file twice.
   const VideoBlock = ({ className }: { className?: string }) =>
     displayProduct.video_url ? (
       <div className={cn("rounded-bento-lg overflow-hidden bg-black border border-line/30", className)}>
         <video
           src={displayProduct.video_url}
+          poster={primaryImg || undefined}
           autoPlay
           loop
           muted
@@ -244,7 +283,7 @@ export function Product() {
             </motion.div>
 
             {/* Video — desktop only, below image */}
-            <VideoBlock className="hidden lg:block" />
+            {isDesktop && <VideoBlock />}
           </div>
 
           {/* ══ RIGHT — info column ══ */}
@@ -432,7 +471,7 @@ export function Product() {
             </div>
 
             {/* Video — mobile only, below details */}
-            <VideoBlock className="lg:hidden" />
+            {!isDesktop && <VideoBlock />}
           </motion.div>
         </div>
 

@@ -19,6 +19,11 @@ export function useIsMobile(): boolean {
   return useMediaQuery("(max-width: 767px)");
 }
 
+/** Tailwind's `lg` breakpoint. Use to mount a heavy element on only one side of it. */
+export function useIsDesktop(): boolean {
+  return useMediaQuery("(min-width: 1024px)");
+}
+
 export function usePrefersReducedMotion(): boolean {
   return useMediaQuery("(prefers-reduced-motion: reduce)");
 }
